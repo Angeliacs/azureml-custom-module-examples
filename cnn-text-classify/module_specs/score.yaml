@@ -1,0 +1,69 @@
+name: TextCNN Predict Model
+id: f5793e3a-3b2a-485f-afb4-a00666a71b5f
+category: Machine Learning\Score
+description: Predict the classes through the trained TextCNN model
+inputs:
+- name: Trained model
+  type: Model
+  connectable: True
+  description: The trained model file
+- name: Predict data
+  type: Dataset
+  connectable: True
+  description: Predict data
+outputs:
+- name: Predict result
+  type: Dataset
+  connectable: True
+  description: Predict result
+implementation:
+  container:
+    meta:
+      baseDockerImage: mcr.microsoft.com/azureml/base-gpu:intelmpi2018.3-cuda10.0-cudnn7-ubuntu16.04
+      gpuSupport: true
+    conda:
+      content:
+        name: project_environment
+        channels:
+        - defaults
+        dependencies:
+        - python=3.6.8
+        - pip:
+          - --extra-index-url=https://test.pypi.org/simple
+          - alghost==0.0.53
+          - pyarrow==0.12.1
+          - nltk==3.4
+          - numpy==1.16.2
+          - https://download.pytorch.org/whl/cu100/torch-1.1.0-cp36-cp36m-linux_x86_64.whl
+          - https://download.pytorch.org/whl/cu100/torchvision-0.3.0-cp36-cp36m-linux_x86_64.whl
+          - git+https://github.com/Angeliacs/learn-kubeflow.git@chsi/cnn_text_classify#subdirectory=cnn-text-classify
+    command:
+    - python
+    - -m
+    - csmodel.predictor_updated_only_model
+    args:
+    - -trained-model
+    - inputValue: Trained model
+    - -predict-path
+    - inputValue: Predict data
+    - -predict-result-path
+    - outputPath: Predict result
+  serving:
+    sameCondaWithContainer: true
+    pythonServingClass:
+      moduleName: predictor
+      className: DataPreprocessor
+      init:
+        name: __init__
+        inputs:
+        - name: vocab_path
+          type: ModelDirectory
+      run:
+        name: process
+        inputs:
+        - name: data_frame
+          type: DataFrame #
+        outputs:
+        - name: data_frame
+          type: DataFrame #d
+
