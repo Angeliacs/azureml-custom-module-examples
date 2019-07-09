@@ -55,7 +55,7 @@ outputs:
   connectable: True
   description: Trained learner
 - name: Vocab
-  type: Dataset
+  type: GenericFolder
   connectable: True
   description: Vocab for predict the sentence
 implementation:

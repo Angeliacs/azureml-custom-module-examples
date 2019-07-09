@@ -33,21 +33,24 @@ class Trainer():
 
         # Dump data_type.json as a work around until SMT deploys
         dct = {
-            "Id": "Dataset",
-            "Name": "Dataset .NET file",
-            "ShortName": "Dataset",
-            "Description": "A serialized DataTable supporting partial reads and writes",
+            "Id": "GenericFolder",
+            "Name": "Generic Folder",
+            "ShortName": "GenericFolder",
+            "Description": "A generic folder contains any type of files",
             "IsDirectory": False,
             "Owner": "Microsoft Corporation",
-            "FileExtension": "dataset.parquet",
-            "ContentType": "application/octet-stream",
+            "FileExtension": "folder",
+            "ContentType": "",
             "AllowUpload": False,
             "AllowPromotion": True,
             "AllowModelPromotion": False,
             "AuxiliaryFileExtension": None,
             "AuxiliaryContentType": None
         }
+
         with open(os.path.join(self.args.vocab_path, 'data_type.json'), 'w') as f:
+            json.dump(dct, f)
+        with open(os.path.join(self.args.vocab_path, 'data.folder'), 'w') as f:
             json.dump(dct, f)
 
 
