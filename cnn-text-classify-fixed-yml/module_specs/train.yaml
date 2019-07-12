@@ -14,47 +14,38 @@ inputs:
 - name: Word embedding dim
   default: 300
   type: Int
-  port: False
   description: The dimention of word embeddings
 - name: Kernel num
   default: 128
   type: Int
-  port: False
   description: Number of each kind of kernel
 - name: Dropout
   default: 0.5
   type: Float
-  port: False
   description: The probability for dropout
 - name: Batch size
   default: 32
   type: Int
-  port: False
   description: Batch size
 - name: L2 regularization weight
   default: 0
   type: Float
-  port: False
   description: L2 regularization weight
 - name: Test interval
   default: 100
   type: Int
-  port: False
   description: How many steps to wait before testing
 - name: Epoch num
   default: 1
   type: Int
-  port: False
   description: Epoch num
 - name: Label column name
   default: label
   type: String
-  port: False
   description: Select the column that contains the label or outcome column
 - name: Text column name
   default: text
   type: String
-  port: False
   description: Select the column that contains the Text or input column
 outputs:
 - name: Trained model
