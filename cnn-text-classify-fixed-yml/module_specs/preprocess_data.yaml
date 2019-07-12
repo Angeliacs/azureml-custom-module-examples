@@ -14,7 +14,6 @@ inputs:
 outputs:
 - name: Processed data
   type: TabularDataFolder
-  port: True
   description: Processed data
 implementation:
   container:

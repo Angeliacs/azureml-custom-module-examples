@@ -50,11 +50,9 @@ inputs:
 outputs:
 - name: Trained model
   type: ModelFolder
-  port: True
   description: Trained learner
 - name: Vocab
   type: GenericFolder
-  port: True
   description: Vocab for predict the sentence
 implementation:
   container:
