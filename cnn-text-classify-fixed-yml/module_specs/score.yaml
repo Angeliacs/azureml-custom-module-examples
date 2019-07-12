@@ -42,11 +42,11 @@ implementation:
     - -m
     - csmodel.score
     args:
-    - -trained-model
+    - --trained-model
     - inputValue: Trained model
-    - -predict-path
+    - --predict-path
     - inputValue: Predict data
-    - -predict-result-path
+    - --predict-result-path
     - outputPath: Predict result
   invoking:
     module: csmodel.score

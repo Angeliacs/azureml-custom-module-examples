@@ -79,31 +79,31 @@ implementation:
     - -m
     - csmodel.trainer
     args:
-    - -embed-dim
+    - --embed-dim
     - inputValue: Word embedding dim
-    - -kernel-num
+    - --kernel-num
     - inputValue: Kernel num
-    - -dropout
+    - --dropout
     - inputValue: Dropout
-    - -train-file
+    - --train-file
     - inputValue: Train data file
-    - -test-file
+    - --test-file
     - inputValue: Validation data file
-    - -label-column
+    - --label-column
     - inputValue: Label column name
-    - -text-column
+    - --text-column
     - inputValue: Text column name
-    - -batch-size
+    - --batch-size
     - inputValue: Batch size
-    - -l2
+    - --l2
     - inputValue: L2 regularization weight
-    - -test-interval
+    - --test-interval
     - inputValue: Test interval
-    - -epochs
+    - --epochs
     - inputValue: Epoch num
-    - -trained-model
+    - --trained-model
     - outputPath: Trained model
-    - -vocab-path
+    - --vocab-path
     - outputPath: Vocab
 
 

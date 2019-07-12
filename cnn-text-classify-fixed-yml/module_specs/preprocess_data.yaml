@@ -40,11 +40,11 @@ implementation:
     - -m
     - csmodel.preprocess_data
     args:
-    - -input-vocab
+    - --input-vocab
     - inputValue: Input vocab
-    - -input-data
+    - --input-data
     - inputValue: Input text
-    - -output-data
+    - --output-data
     - outputPath: Processed data
   invoking:
     module: csmodel.preprocess_data
