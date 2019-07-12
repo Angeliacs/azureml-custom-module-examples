@@ -76,7 +76,7 @@ implementation:
           - numpy==1.16.2
           - https://download.pytorch.org/whl/cu100/torch-1.1.0-cp36-cp36m-linux_x86_64.whl
           - torchvision==0.2.2.post3
-          - git+https://github.com/Angeliacs/learn-kubeflow.git@chsi/cnn_text_classify#subdirectory=cnn-text-classify
+          - git+https://github.com/Clqsin45/azureml-custom-module-examples.git@linchi/cnn_text_classify_exp#subdirectory=cnn-text-classify-fixed-yml
     command:
     - python
     - -m
