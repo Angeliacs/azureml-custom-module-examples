@@ -5,46 +5,48 @@ description: Transform Word to Id
 inputs:
 - name: Input vocab
   type: GenericFolder
-  connectable: True
+  port: True
   description: The vocabulary file
 - name: Input text
-  type: Dataset
-  connectable: True
+  type: TabularDataFolder
+  port: True
   description: Input text
 outputs:
 - name: Processed data
-  type: Dataset
-  connectable: True
+  type: TabularDataFolder
   description: Processed data
 implementation:
   container:
-    meta:
+    runConfig:
       baseDockerImage: mcr.microsoft.com/azureml/base-gpu:intelmpi2018.3-cuda10.0-cudnn7-ubuntu16.04
       gpuSupport: true
     conda:
-      content:
-        name: project_environment
-        channels:
-        - defaults
-        dependencies:
-        - python=3.6.8
-        - pip:
-          - --extra-index-url=https://test.pypi.org/simple
-          - alghost==0.0.53
-          - pyarrow==0.12.1
-          - nltk==3.4
-          - numpy==1.16.2
-          - https://download.pytorch.org/whl/cu100/torch-1.1.0-cp36-cp36m-linux_x86_64.whl
-          - https://download.pytorch.org/whl/cu100/torchvision-0.3.0-cp36-cp36m-linux_x86_64.whl
-          - git+https://github.com/Angeliacs/learn-kubeflow.git@chsi/cnn_text_classify#subdirectory=cnn-text-classify
+      name: project_environment
+      channels:
+      - defaults
+      dependencies:
+      - python=3.6.8
+      - pip:
+        - --extra-index-url=https://test.pypi.org/simple
+        - alghost==0.0.53
+        - pyarrow==0.12.1
+        - nltk==3.4
+        - numpy==1.16.2
+        - https://download.pytorch.org/whl/cu100/torch-1.1.0-cp36-cp36m-linux_x86_64.whl
+        - torchvision==0.2.2.post3
+        - git+https://github.com/Angeliacs/learn-kubeflow.git@chsi/cnn_text_classify#subdirectory=cnn-text-classify
     command:
     - python
     - -m
     - csmodel.preprocess_data
     args:
-    - -input-vocab
+    - --input-vocab
     - inputValue: Input vocab
-    - -input-data
+    - --input-data
     - inputValue: Input text
-    - -output-data
+    - --output-data
     - outputPath: Processed data
+  invoking:
+    module: csmodel.preprocess_data
+    class: DataPreprocessor
+    func: process

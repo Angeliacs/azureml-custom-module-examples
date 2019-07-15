@@ -7,10 +7,10 @@ from azureml.core.environment import DEFAULT_GPU_IMAGE
 MODULE_SPECS_FOLDER = 'module_specs'
 
 class TextCNNConstants:
-    WORKSPACE_NAME = 'linchi_test_service_workspace'
+    WORKSPACE_NAME = 'cus-test-cs'
     SUBSCRIPTION_ID = 'e9b2ec51-5c94-4fa8-809a-dc1e695e4896'
-    RESOURCE_GROUP = 'linchires'
-    COMPUTE_NAME = 'gpu-nc6'
+    RESOURCE_GROUP = 'cus-test-cs'
+    COMPUTE_NAME = 'gpu0'
 
 
 def spec_file_path(spec_file_name):
@@ -91,6 +91,7 @@ def create_pipeline_steps(compute_name):
     train.params['Kernel num'].assign(256)
     train.params['Dropout'].assign(0.5)
     train.params['Batch size'].assign(128)
+    train.params['Epoch num'].assign(3)
     train.params['L2 regularization weight'].assign(0.)
     train.params['Test interval'].assign(100)
 
@@ -110,7 +111,6 @@ def create_pipeline_steps(compute_name):
     return pipeline_step_list
 
 if __name__ == '__main__':
-    print( os.path.dirname('run_on_amlservice.py') )
     workspace = get_workspace(
         name=TextCNNConstants.WORKSPACE_NAME,
         subscription_id=TextCNNConstants.SUBSCRIPTION_ID,

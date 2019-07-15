@@ -17,8 +17,6 @@ class DataPreprocessor(object):
         self.cut = word_tokenize
         with open(self.vocab_path + '/' + 'word2id.pkl', 'rb') as f:
             self.word2id = pickle.load(f)
-        # with open(self.vocab_path + '/' + 'id2label.pkl', 'rb') as f:
-        #     self.id2label = pickle.load(f)
 
     def process(self, data_frame: pd.DataFrame):
         word_id_list = []

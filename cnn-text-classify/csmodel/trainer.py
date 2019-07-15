@@ -77,9 +77,7 @@ class Trainer():
         step, best_acc, last_step = 0, 0, 0
         train_loss, train_acc = 0., 0.
         self.model.train()
-        flag = 0
         for epoch in range(1, self.args.epochs + 1):
-            if flag == 1: break
             for feature, target in self.train_iter:
                 feature = Variable(feature)
                 target = Variable(target)
@@ -118,14 +116,6 @@ class Trainer():
                         if self.args.save_best:
                             self.save('best', step)
                             continue
-                    else:
-                        if step - last_step >= self.args.early_stop:
-                            logging.info('\nEarly stop by %d steps.' % (self.args.early_stop))
-                            flag = 1
-                            break
-                if step % self.args.save_interval == 0:
-                    self.save('last', step)
-                if step > 100: break
 
     def eval(self):
         self.model.eval()
