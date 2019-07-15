@@ -2,6 +2,7 @@ name: TextCNN Score Model
 id: 9f1adb62-8df5-49f6-a1fa-f2fb0e9eb5ae
 category: Machine Learning\Score
 description: Predict the classes through the trained TextCNN model
+isDeprecated: True
 inputs:
 - name: Trained model
   type: ModelFolder
