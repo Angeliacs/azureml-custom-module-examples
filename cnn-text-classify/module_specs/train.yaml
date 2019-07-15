@@ -71,6 +71,7 @@ implementation:
         - pyarrow==0.12.1
         - nltk==3.4
         - numpy==1.16.2
+        - cloudpickle==1.2.1
         - https://download.pytorch.org/whl/cu100/torch-1.1.0-cp36-cp36m-linux_x86_64.whl
         - torchvision==0.2.2.post3
         - git+https://github.com/Angeliacs/azureml-custom-module-examples.git@chsi/ds-cnn#subdirectory=cnn-text-classify
