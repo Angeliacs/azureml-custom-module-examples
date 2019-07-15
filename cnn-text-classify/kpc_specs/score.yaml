@@ -1,0 +1,27 @@
+name: TextCNN Score Model
+description: Predict the classes through the trained TextCNN model
+inputs:
+- name: Trained model
+  type: ModelFolder
+  description: The trained model file
+- name: Predict data
+  type: TabularDataFolder
+  description: Predict data
+outputs:
+- name: Predict result
+  type: TabularDataFolder
+  description: Predict result
+implementation:
+  container:
+    image: mycorp/my-docker-image
+    command:
+    - python
+    - -m
+    - csmodel.score
+    args:
+    - --trained-model
+    - inputValue: Trained model
+    - --predict-path
+    - inputValue: Predict data
+    - --predict-result-path
+    - outputPath: Predict result

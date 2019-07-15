@@ -1,0 +1,27 @@
+name: TextCNN Word to Id
+description: Transform Word to Id
+inputs:
+- name: Input vocab
+  type: GenericFolder
+  description: The vocabulary file
+- name: Input text
+  type: TabularDataFolder
+  description: Input text
+outputs:
+- name: Processed data
+  type: TabularDataFolder
+  description: Processed data
+implementation:
+  container:
+    image: mycorp/my-docker-image
+    command:
+    - python
+    - -m
+    - csmodel.preprocess_data
+    args:
+    - --input-vocab
+    - inputValue: Input vocab
+    - --input-data
+    - inputValue: Input text
+    - --output-data
+    - outputPath: Processed data

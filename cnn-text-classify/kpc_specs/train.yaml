@@ -1,0 +1,88 @@
+name: TextCNN Train Model
+description: Trains a TextCNN model in a supervised manner
+inputs:
+- name: Train data file
+  type: TabularDataFolder
+  description: Training data
+- name: Validation data file
+  type: TabularDataFolder
+  description: Test data
+- name: Word embedding dim
+  default: 300
+  type: Int
+  description: The dimention of word embeddings
+- name: Kernel num
+  default: 128
+  type: Int
+  description: Number of each kind of kernel
+- name: Dropout
+  default: 0.5
+  type: Float
+  description: The probability for dropout
+- name: Batch size
+  default: 32
+  type: Int
+  description: Batch size
+- name: L2 regularization weight
+  default: 0
+  type: Float
+  description: L2 regularization weight
+- name: Test interval
+  default: 100
+  type: Int
+  description: How many steps to wait before testing
+- name: Epoch num
+  default: 1
+  type: Int
+  description: Epoch num
+- name: Label column name
+  default: label
+  type: String
+  description: Select the column that contains the label or outcome column
+- name: Text column name
+  default: text
+  type: String
+  description: Select the column that contains the Text or input column
+outputs:
+- name: Trained model
+  type: ModelFolder
+  description: Trained learner
+- name: Vocab
+  type: GenericFolder
+  description: Vocab for predict the sentence
+implementation:
+  container:
+    image: mycorp/my-docker-image
+    command:
+    - python
+    - -m
+    - csmodel.trainer
+    args:
+    - --embed-dim
+    - inputValue: Word embedding dim
+    - --kernel-num
+    - inputValue: Kernel num
+    - --dropout
+    - inputValue: Dropout
+    - --train-file
+    - inputValue: Train data file
+    - --test-file
+    - inputValue: Validation data file
+    - --label-column
+    - inputValue: Label column name
+    - --text-column
+    - inputValue: Text column name
+    - --batch-size
+    - inputValue: Batch size
+    - --l2
+    - inputValue: L2 regularization weight
+    - --test-interval
+    - inputValue: Test interval
+    - --epochs
+    - inputValue: Epoch num
+    - --trained-model
+    - outputPath: Trained model
+    - --vocab-path
+    - outputPath: Vocab
+
+    
