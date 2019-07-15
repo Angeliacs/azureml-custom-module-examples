@@ -36,7 +36,7 @@ implementation:
         - matplotlib==3.1.0
         - https://download.pytorch.org/whl/cu100/torch-1.1.0-cp36-cp36m-linux_x86_64.whl
         - torchvision==0.2.2.post3
-        - git+https://github.com/Angeliacs/learn-kubeflow.git@chsi/cnn_text_classify#subdirectory=cnn-text-classify
+        - git+https://github.com/Angeliacs/azureml-custom-module-examples.git@master#subdirectory=cnn-text-classify
     command:
     - python
     - -m
