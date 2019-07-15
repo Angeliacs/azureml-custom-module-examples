@@ -1,4 +1,4 @@
-name: TextCNN Generic Model
+name: TextCNN Generic Train
 id: 3dae8366-a4e3-452d-ab85-585e0d51af70
 category: Machine Learning\Train
 description: Trains a TextCNN model in a supervised manner
