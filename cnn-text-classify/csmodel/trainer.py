@@ -126,7 +126,7 @@ class Trainer():
             if self.args.cuda:
                 feature, target = feature.cuda(), target.cuda()
 
-            logit = self.model(feature)
+            logit = F.softmax(self.model(feature), dim=1)
             loss = F.cross_entropy(logit, target, size_average=False)
 
             avg_loss += loss.data

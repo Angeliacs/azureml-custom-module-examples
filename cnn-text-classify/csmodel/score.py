@@ -16,6 +16,7 @@ from sklearn.utils.fixes import signature
 from sklearn.metrics import precision_score, recall_score, f1_score
 from sklearn.metrics import roc_curve
 from sklearn.metrics import auc
+import torch.nn.functional as F
 
 class Predictor():
     def __init__(self, model_folder):
@@ -48,7 +49,7 @@ class Predictor():
                 x = Variable(torch.LongTensor([input_setence]))
                 if torch.cuda.is_available() and self.config.cuda:
                     x = x.cuda()
-                output = self.model(x)
+                output = F.softmax(self.model(x), dim=1)
                 # general classification logic to generate scored label
                 probability, predicted = torch.max(output, 1)
                 output_label.append(predicted.view(1).cpu().numpy()[0])
@@ -67,12 +68,12 @@ class Predictor():
                        if 'step' in signature(plt.fill_between).parameters
                        else {})
         f1_plt = plt.figure(1)
-        plt.step(recall, precision, color='b', alpha=0.2,
+        plt.step(precision, recall, color='b', alpha=0.2,
                  where='post')
-        plt.fill_between(recall, precision, alpha=0.2, color='b', **step_kwargs)
+        plt.fill_between(precision, recall, alpha=0.2, color='b', **step_kwargs)
 
-        plt.xlabel('Recall')
-        plt.ylabel('Precision')
+        plt.ylabel('Recall')
+        plt.xlabel('Precision')
         plt.ylim([0, 1.1])
         plt.title('2-class Precision-Recall curve: AP={0:0.2f}'.format(
             average_precision))
