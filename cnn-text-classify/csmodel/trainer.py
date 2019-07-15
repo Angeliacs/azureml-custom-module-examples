@@ -14,6 +14,8 @@ import torch
 import torch.nn as nn
 import json
 
+import cloudpickle
+
 class Trainer():
     def __init__(self, args):
         self.args = args
@@ -30,6 +32,10 @@ class Trainer():
             pickle.dump(self.label2id, f)
         with open(self.args.vocab_path + '/' + 'id2label.pkl', 'wb') as f:
             pickle.dump(self.id2label, f)
+        # with open(self.args.vocab_path + '/' + 'data.csv', 'w') as f:
+        #     f.write('f1\n1\n')
+
+
 
         # Dump data_type.json as a work around until SMT deploys
         dct = {
@@ -52,7 +58,6 @@ class Trainer():
             json.dump(dct, f)
         with open(os.path.join(self.args.vocab_path, 'data.folder'), 'w') as f:
             json.dump(dct, f)
-
 
         self.train_iter, self.test_iter = load_data(self.args.train_file, self.args.test_file, self.word2id,
                                                     self.label2id, self.args)
@@ -117,6 +122,7 @@ class Trainer():
                             self.save('best', step)
                             continue
 
+
     def eval(self):
         self.model.eval()
         corrects, avg_loss = 0, 0
@@ -126,7 +132,7 @@ class Trainer():
             if self.args.cuda:
                 feature, target = feature.cuda(), target.cuda()
 
-            logit = F.softmax(self.model(feature), dim=1)
+            logit = self.model(feature)
             loss = F.cross_entropy(logit, target, size_average=False)
 
             avg_loss += loss.data
@@ -142,12 +148,18 @@ class Trainer():
     def save(self, save_prefix, steps):
         if not os.path.isdir(self.args.trained_model):
             os.makedirs(self.args.trained_model)
-        save_prefix = os.path.join(self.args.trained_model, save_prefix)
-        # with open(save_prefix + "/model.pkl", "wb") as fp:
-        #     cloudpickle.dump(self.model, fp)
-        save_path = '%s_steps_%d.pt' % (save_prefix, 100)
-        torch.save(self.model.state_dict(), save_path)
+        save_path = os.path.join(self.args.trained_model, 'model.pkl')
+        yaml_path = os.path.join(self.args.trained_model, 'model_spec.yml')
+        with open(save_path, "wb") as fp:
+            cloudpickle.dump(self.model, fp)
+        print("Model saved")
 
+        import yaml
+
+        file = open(yaml_path, "w")
+        data = {'model_file_path': 'model.pkl', 'flavor': {'framework': 'Pytorch'}}
+        yaml.dump(data, file)
+        file.close()
 
         # Dump data_type.json as a work around until SMT deploys
         dct = {

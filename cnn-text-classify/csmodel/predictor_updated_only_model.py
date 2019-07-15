@@ -18,7 +18,7 @@ class Predictor():
         self.config = config
         self.model = TextCNN(config)
         # model weight file must be loaded to get learnt weight.
-        model_file = os.path.join(model_folder, "best_steps_100.pt")
+        model_file = os.path.join(model_folder, "model.pkl")
         if model_file is not None:
             self.model.load_state_dict(torch.load(model_file))
         else:

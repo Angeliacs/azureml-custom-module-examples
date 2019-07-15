@@ -1,5 +1,5 @@
-name: TextCNN Train Model
-id: f9b3dea7-48d2-4126-bd0c-f5c6588c4c29
+name: TextCNN Generic Model
+id: 3dae8366-a4e3-452d-ab85-585e0d51af70
 category: Machine Learning\Train
 description: Trains a TextCNN model in a supervised manner
 inputs:
@@ -73,7 +73,7 @@ implementation:
         - numpy==1.16.2
         - https://download.pytorch.org/whl/cu100/torch-1.1.0-cp36-cp36m-linux_x86_64.whl
         - torchvision==0.2.2.post3
-        - git+https://github.com/Angeliacs/learn-kubeflow.git@chsi/cnn_text_classify#subdirectory=cnn-text-classify
+        - git+https://github.com/Angeliacs/azureml-custom-module-examples.git@chsi/ds-cnn#subdirectory=cnn-text-classify
     command:
     - python
     - -m
@@ -105,3 +105,4 @@ implementation:
     - outputPath: Trained model
     - --vocab-path
     - outputPath: Vocab
+
