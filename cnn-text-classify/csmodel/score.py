@@ -68,12 +68,12 @@ class Predictor():
                        if 'step' in signature(plt.fill_between).parameters
                        else {})
         f1_plt = plt.figure(1)
-        plt.step(precision, recall, color='b', alpha=0.2,
+        plt.step(recall, precision, color='b', alpha=0.2,
                  where='post')
-        plt.fill_between(precision, recall, alpha=0.2, color='b', **step_kwargs)
+        plt.fill_between(recall, precision, alpha=0.2, color='b', **step_kwargs)
 
-        plt.ylabel('Recall')
-        plt.xlabel('Precision')
+        plt.xlabel('Recall')
+        plt.ylabel('Precision')
         plt.ylim([0, 1.1])
         plt.title('2-class Precision-Recall curve: AP={0:0.2f}'.format(
             average_precision))
