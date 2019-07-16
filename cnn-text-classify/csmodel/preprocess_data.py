@@ -36,6 +36,7 @@ class DataPreprocessor(object):
             for index, row in data_frame.iterrows():
                 text = word_tokenize(row['text'])
                 text_id = [self.word2id[word] if word != '\x00' and word in self.word2id else 0 for word in text]
+                text_list.append(row['text'])
                 word_id_list.append(text_id)
             return pd.DataFrame({'text_id': word_id_list, 'text': text_list})
 
