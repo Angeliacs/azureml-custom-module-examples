@@ -120,6 +120,7 @@ if __name__ == '__main__':
     parquet_path = os.path.join(args.predict_path, 'data.dataset.parquet')
     df = pd.read_parquet(parquet_path, engine='pyarrow')
     out_df = predictor.predict(df)
+    out_df.drop(['text_id'], axis=1, inplace=True)
     out_df.to_parquet(os.path.join(args.predict_result_path, 'data.dataset.parquet'))
 
     headers = df.columns.values.tolist()
