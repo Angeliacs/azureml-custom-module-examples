@@ -1,20 +1,17 @@
-import pickle
 import logging
 import pickle
 import sys
 import pyarrow.parquet as pq
-
 import torch.nn.functional as F
 from torch.autograd import Variable
-
-# from .TextCNN import TextCNN as Model
 from .args_util import *
 from .data_util import process_data, load_data
 import torch
 import torch.nn as nn
 import json
-
 import cloudpickle
+import yaml
+
 
 class Trainer():
     def __init__(self, args):
@@ -32,10 +29,6 @@ class Trainer():
             pickle.dump(self.label2id, f)
         with open(self.args.vocab_path + '/' + 'id2label.pkl', 'wb') as f:
             pickle.dump(self.id2label, f)
-        # with open(self.args.vocab_path + '/' + 'data.csv', 'w') as f:
-        #     f.write('f1\n1\n')
-
-
 
         # Dump data_type.json as a work around until SMT deploys
         dct = {
@@ -122,7 +115,6 @@ class Trainer():
                             self.save('best', step)
                             continue
 
-
     def eval(self):
         self.model.eval()
         corrects, avg_loss = 0, 0
@@ -154,8 +146,6 @@ class Trainer():
             cloudpickle.dump(self.model, fp)
         print("Model saved")
 
-        import yaml
-
         file = open(yaml_path, "w")
         data = {'model_file_path': 'model.pkl', 'flavor': {'framework': 'Pytorch'}}
         yaml.dump(data, file)
@@ -184,6 +174,7 @@ class Trainer():
         visualization = os.path.join(self.args.trained_model, "data.ilearner")
         with open(visualization, 'w') as file:
             file.writelines('{}')
+
 
 class TextCNN(nn.Module):
     def __init__(self, args):
@@ -219,6 +210,7 @@ class TextCNN(nn.Module):
         x = self.dropout(x)
         logit = self.fc(x)
         return logit
+
 
 if __name__ == '__main__':
     args = train_args()

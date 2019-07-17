@@ -14,7 +14,6 @@ INITIAL_COMMANDS = '''
 pwd
 '''.splitlines()
 
-
 if __name__ == '__main__':
     for command in INITIAL_COMMANDS:
         run(command)

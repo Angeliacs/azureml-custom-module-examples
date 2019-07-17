@@ -2,6 +2,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
+
+
 class TextCNN(nn.Module):
     def __init__(self, args):
         super(TextCNN, self).__init__()

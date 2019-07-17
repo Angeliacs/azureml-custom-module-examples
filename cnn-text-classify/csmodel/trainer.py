@@ -1,18 +1,15 @@
-import pickle
 import logging
 import pickle
 import sys
 import pyarrow.parquet as pq
-
 import torch.nn.functional as F
 from torch.autograd import Variable
-
-# from .TextCNN import TextCNN as Model
 from .args_util import *
 from .data_util import process_data, load_data
 import torch
 import torch.nn as nn
 import json
+
 
 class Trainer():
     def __init__(self, args):
@@ -52,7 +49,6 @@ class Trainer():
             json.dump(dct, f)
         with open(os.path.join(self.args.vocab_path, 'data.folder'), 'w') as f:
             json.dump(dct, f)
-
 
         self.train_iter, self.test_iter = load_data(self.args.train_file, self.args.test_file, self.word2id,
                                                     self.label2id, self.args)
@@ -148,7 +144,6 @@ class Trainer():
         save_path = '%s_steps_%d.pt' % (save_prefix, 100)
         torch.save(self.model.state_dict(), save_path)
 
-
         # Dump data_type.json as a work around until SMT deploys
         dct = {
             "Id": "ILearnerDotNet",
@@ -172,6 +167,7 @@ class Trainer():
         visualization = os.path.join(self.args.trained_model, "data.ilearner")
         with open(visualization, 'w') as file:
             file.writelines('{}')
+
 
 class TextCNN(nn.Module):
     def __init__(self, args):
@@ -207,6 +203,7 @@ class TextCNN(nn.Module):
         x = self.dropout(x)
         logit = self.fc(x)
         return logit
+
 
 if __name__ == '__main__':
     args = train_args()

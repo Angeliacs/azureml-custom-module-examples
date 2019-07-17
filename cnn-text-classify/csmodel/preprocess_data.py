@@ -3,13 +3,14 @@ import pyarrow.parquet as pq
 import os
 import pickle
 import re
-
 import pandas as pd
 from nltk.tokenize import word_tokenize
 import nltk
 from .args_util import preprocess_args
 
 nltk.download('punkt')
+
+
 class DataPreprocessor(object):
     def __init__(self, vocab_path):
         self.vocab_path = vocab_path

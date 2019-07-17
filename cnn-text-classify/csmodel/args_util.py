@@ -3,6 +3,7 @@ import datetime
 import torch
 import os
 
+
 def train_args():
     """
     获取参数
@@ -46,7 +47,7 @@ def train_args():
     parser.add_argument('--lr', type=float, default=0.0005,
                         help='initial learning rate [default: 0.001]')
 
-    parser.add_argument('--epochs', type=int, default= 1,
+    parser.add_argument('--epochs', type=int, default=1,
                         help='number of epochs for train [default: 1]')
     parser.add_argument('--max-len', type=int, default=4096,
                         help='max len of sentence for training [default: 1024]')
@@ -67,7 +68,6 @@ def train_args():
                         help='shuffle the data every epoch')
     # model
 
-
     parser.add_argument('--hidden-dim', type=int, default=128,
                         help='hidden dimension [default: 128]')
 
@@ -82,13 +82,13 @@ def train_args():
     parser.add_argument('--cuda', action='store_true', default=True,
                         help='disable the gpu')
 
-
     args, _ = parser.parse_known_args()
     args.cuda = args.cuda and torch.cuda.is_available()
     now_time = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
     # args.save_dir = os.path.join(args.save_dir, now_time)
     args.log_dir = os.path.join(args.log_dir, now_time)
     return args
+
 
 def predict_args():
     parser = argparse.ArgumentParser(description='Predict Args')
@@ -97,10 +97,11 @@ def predict_args():
                         help='the trained path')
     parser.add_argument('--predict-path', type=str, default="debug_out/word_id/",
                         help='the test dataset path')
-    parser.add_argument('--predict-result-path', type=str, default="debug_out/predict_res/" ,
+    parser.add_argument('--predict-result-path', type=str, default="debug_out/predict_res/",
                         help='the predicted output path')
     args, _ = parser.parse_known_args()
     return args
+
 
 def preprocess_args():
     parser = argparse.ArgumentParser(description='Preprocess Args')
@@ -114,8 +115,10 @@ def preprocess_args():
     args, _ = parser.parse_known_args()
     return args
 
+
 def print_parameters(args):
     """
+
     print model parameters
     :param args: model parameters
     :return: None
@@ -123,4 +126,3 @@ def print_parameters(args):
     print("\nParameters:")
     for attr, value in sorted(args.__dict__.items()):
         print("\t{}={}".format(attr.upper(), value))
-

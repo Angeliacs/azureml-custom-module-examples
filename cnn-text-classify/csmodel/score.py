@@ -18,6 +18,7 @@ from sklearn.metrics import roc_curve
 from sklearn.metrics import auc
 import torch.nn.functional as F
 
+
 class Predictor():
     def __init__(self, model_folder):
         self.model_path = model_folder
@@ -112,6 +113,7 @@ class Predictor():
         run.log_image("ROC curve", plot=f3_plt)
         f3_plt.savefig(os.path.join(output_eval_dir, 'roc.png'))
 
+
 if __name__ == '__main__':
     args = predict_args()
     predictor = Predictor(args.trained_model)
@@ -126,7 +128,6 @@ if __name__ == '__main__':
     headers = df.columns.values.tolist()
     if 'label' in headers:
         predictor.evaluation(df['label'], out_df['Scored Label'], out_df['Scored Prob'], args.predict_result_path)
-
 
     # Dump data_type.json as a work around until SMT deploys
     dct = {
