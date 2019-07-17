@@ -12,6 +12,7 @@ nltk.download('punkt')
 
 def process_data(args, file_name):
     """
+
     :return: word2id: map word to id
              id2word: map id to word
              label2id: map label to id
@@ -34,17 +35,6 @@ def process_data(args, file_name):
         if len(words) > max_len:
             max_len = len(words)
         word_set |= set(words)
-
-    # with open(file_name, 'r', encoding='utf-8') as f:
-    #     # reader = csv.reader(f, delimiter="\t")
-    #     reader = csv.reader(f)
-    #     for row in reader:
-    #         label_set.add(row[args.label_column])
-    #         sentence = row[args.text_column]
-    #         words = word_tokenize(sentence)
-    #         if len(words) > max_len:
-    #             max_len = len(words)
-    #         word_set |= set(words)
 
     id2word[0] = '<UNK>'  # unknown
     word2id['<UNK>'] = 0

@@ -41,12 +41,9 @@ class Predictor():
     def predict(self, data_frame):
         output_label = []
         output_prob = []
-        with torch.no_grad():  # ask not to cal
+        with torch.no_grad():
             for index, row in data_frame.iterrows():
-                input_setence = row[
-                    'text_id']  # I have no idea how to pass the 'text' info to the predict. maybe store in somewhere.
-                # input sentence is an int list
-                # how to know what kind of tensor to convert?
+                input_setence = row['text_id']
                 x = Variable(torch.LongTensor([input_setence]))
                 if torch.cuda.is_available() and self.config.cuda:
                     x = x.cuda()
@@ -57,12 +54,10 @@ class Predictor():
                 output_prob.append(probability.view(1).cpu().numpy()[0])
             data_frame['Scored Label'] = output_label
             data_frame['Scored Prob'] = output_prob
+
         return data_frame
 
-    def evaluation(self, df_true, df_predict, df_prob, output_eval_dir):
-        run = Run.get_context()
-
-        # precition-recall-curve
+    def prcurve(self, df_true, df_predict, df_prob):
         average_precision = average_precision_score(df_true, df_predict)
         precision, recall, _ = precision_recall_curve(df_true, df_prob)
         step_kwargs = ({'step': 'post'}
@@ -72,15 +67,15 @@ class Predictor():
         plt.step(recall, precision, color='b', alpha=0.2,
                  where='post')
         plt.fill_between(recall, precision, alpha=0.2, color='b', **step_kwargs)
-
         plt.xlabel('Recall')
         plt.ylabel('Precision')
         plt.ylim([0, 1.1])
         plt.title('2-class Precision-Recall curve: AP={0:0.2f}'.format(
             average_precision))
-        run.log_image("precition/recall curve", plot=f1_plt)
-        f1_plt.savefig(os.path.join(output_eval_dir, 'precition_recall.png'))
 
+        return f1_plt
+
+    def scores(self, df_true, df_predict):
         f2_plt = plt.figure(2)
         metrics_name = ['precition', 'recall', 'F1-Score']
         p = precision_score(df_true, df_predict, average='binary')
@@ -94,11 +89,11 @@ class Predictor():
         plt.ylim([0, 1.1])
         plt.ylabel('score')
         plt.title('Scores')
-        run.log_image("scores", plot=f2_plt)
-        f2_plt.savefig(os.path.join(output_eval_dir, 'scores.png'))
 
+        return f2_plt
+
+    def Roc_curve(self, df_true, df_prob):
         f3_plt = plt.figure(3)
-        # Compute fpr, tpr, thresholds and roc auc
         fpr, tpr, thresholds = roc_curve(df_true, df_prob)
         roc_auc = auc(df_true, df_prob)
 
@@ -110,6 +105,21 @@ class Predictor():
         plt.ylabel('True Positive Rate or (Sensitivity)')
         plt.title('ROC Curve')
         plt.legend(loc="lower right")
+
+        return f3_plt
+
+    def evaluation(self, df_true, df_predict, df_prob, output_eval_dir):
+        run = Run.get_context()
+
+        f1_plt = self.prcurve(df_true, df_predict, df_prob)
+        run.log_image("precition/recall curve", plot=f1_plt)
+        f1_plt.savefig(os.path.join(output_eval_dir, 'precition_recall.png'))
+
+        f2_plt = self.scores(df_true, df_predict)
+        run.log_image("scores", plot=f2_plt)
+        f2_plt.savefig(os.path.join(output_eval_dir, 'scores.png'))
+
+        f3_plt = self.Roc_curve(df_true, df_prob)
         run.log_image("ROC curve", plot=f3_plt)
         f3_plt.savefig(os.path.join(output_eval_dir, 'roc.png'))
 
