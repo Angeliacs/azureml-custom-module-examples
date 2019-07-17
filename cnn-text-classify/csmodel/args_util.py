@@ -1,7 +1,8 @@
 import argparse
 import datetime
-import torch
 import os
+
+import torch
 
 
 def train_args():

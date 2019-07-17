@@ -1,16 +1,21 @@
+import json
 import logging
+import os
 import pickle
 import sys
+
+import cloudpickle
 import pyarrow.parquet as pq
-import torch.nn.functional as F
-from torch.autograd import Variable
-from .args_util import *
-from .data_util import process_data, load_data
 import torch
 import torch.nn as nn
-import json
-import cloudpickle
+import torch.nn.functional as F
 import yaml
+from torch.autograd import Variable
+
+from .args_util import train_args, print_parameters
+from .data_util import process_data, load_data
+
+logging.info(f"Load pyarrow.parquet explicitly: {pq}")
 
 
 class Trainer():

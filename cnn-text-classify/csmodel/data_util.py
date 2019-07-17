@@ -1,11 +1,12 @@
+import os
+
+import nltk
+import numpy as np
 import pyarrow.parquet as pq
 import torch
-import nltk
+from azureml.studio.common.io.data_table_io import read_data_table
 from nltk.tokenize import word_tokenize
 from torch.utils import data
-import numpy as np
-from azureml.studio.common.io.data_table_io import read_data_table
-import os
 
 nltk.download('punkt')
 
@@ -25,8 +26,6 @@ def process_data(args, file_name):
     parquet_path = os.path.join(file_name, 'data.dataset.parquet')
     dt = read_data_table(parquet_path)
     df = dt.data_frame
-    print(df)
-    # df = pandas.read_csv("IMDB/train.csv")
 
     for index, row in df.iterrows():
         label_set.add(row[args.label_column])
@@ -76,6 +75,7 @@ def load_data(train_file, test_file, word2id, label2id, args):
         collate_fn=batch_collate,
         num_workers=8
     )
+    print(f"Load pyarrow.parquet explicitly: {pq}")
     return train_iter, test_iter
 
 

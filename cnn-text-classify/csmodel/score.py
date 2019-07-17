@@ -1,22 +1,23 @@
-import pyarrow.parquet as pq
+import json
 import os
 import pickle
 
+import matplotlib.pyplot as plt
 import pandas as pd
+import pyarrow.parquet as pq
 import torch
-from .TextCNN import TextCNN
-from .args_util import predict_args
-from torch.autograd import Variable
-import json
+import torch.nn.functional as F
 from azureml.core.run import Run
+from sklearn.metrics import auc
 from sklearn.metrics import average_precision_score
 from sklearn.metrics import precision_recall_curve
-import matplotlib.pyplot as plt
-from sklearn.utils.fixes import signature
 from sklearn.metrics import precision_score, recall_score, f1_score
 from sklearn.metrics import roc_curve
-from sklearn.metrics import auc
-import torch.nn.functional as F
+from sklearn.utils.fixes import signature
+from torch.autograd import Variable
+
+from .TextCNN import TextCNN
+from .args_util import predict_args
 
 
 class Predictor():
@@ -127,6 +128,7 @@ class Predictor():
 if __name__ == '__main__':
     args = predict_args()
     predictor = Predictor(args.trained_model)
+    print(f"Load pyarrow.parquet explicitly: {pq}")
     if not os.path.isdir(args.predict_result_path):
         os.makedirs(args.predict_result_path)
     parquet_path = os.path.join(args.predict_path, 'data.dataset.parquet')

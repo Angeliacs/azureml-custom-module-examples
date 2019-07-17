@@ -1,14 +1,18 @@
+import json
 import logging
 import pickle
 import sys
+
 import pyarrow.parquet as pq
-import torch.nn.functional as F
-from torch.autograd import Variable
-from .args_util import *
-from .data_util import process_data, load_data
 import torch
 import torch.nn as nn
-import json
+import torch.nn.functional as F
+from torch.autograd import Variable
+
+from .args_util import *
+from .data_util import process_data, load_data
+
+logging.info(f"Load pyarrow.parquet explicitly: {pq}")
 
 
 class Trainer():
@@ -139,8 +143,6 @@ class Trainer():
         if not os.path.isdir(self.args.trained_model):
             os.makedirs(self.args.trained_model)
         save_prefix = os.path.join(self.args.trained_model, save_prefix)
-        # with open(save_prefix + "/model.pkl", "wb") as fp:
-        #     cloudpickle.dump(self.model, fp)
         save_path = '%s_steps_%d.pt' % (save_prefix, 100)
         torch.save(self.model.state_dict(), save_path)
 

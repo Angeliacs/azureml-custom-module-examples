@@ -1,11 +1,12 @@
-import pyarrow.parquet as pq
-
 import os
 import pickle
 import re
-import pandas as pd
-from nltk.tokenize import word_tokenize
+
 import nltk
+import pandas as pd
+import pyarrow.parquet as pq
+from nltk.tokenize import word_tokenize
+
 from .args_util import preprocess_args
 
 nltk.download('punkt')
@@ -51,6 +52,7 @@ if __name__ == '__main__':
     if not os.path.exists(args.output_data):
         os.makedirs(args.output_data)
     print("write to ", os.path.join(args.output_data, 'data.dataset.parquet'))
+    print(f"Load pyarrow.parquet explicitly: {pq}")
     output_data.to_parquet(os.path.join(args.output_data, 'data.dataset.parquet'), engine='pyarrow')
 
     import json
