@@ -45,7 +45,7 @@ implementation:
     - -m
     - script.score
     args:
-    - --trained-model_dir
+    - --trained_model_dir
     - inputValue: Trained model
     - --dev_file
     - inputValue: Predict data
