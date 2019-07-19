@@ -80,7 +80,7 @@ def train_args():
     parser.add_argument('--server_ip', type=str, default='', help="Can be used for distant debugging.")
     parser.add_argument('--server_port', type=str, default='', help="Can be used for distant debugging.")
 
-    args = parser.parse_args()
+    args, _ = parser.parse_known_args()
 
     return args
 
@@ -130,7 +130,7 @@ def predict_args():
                         default=-1,
                         help="local_rank for distributed training on gpus")
 
-    args = parser.parse_args()
+    args, _ = parser.parse_known_args()
     return args
 
 
@@ -148,5 +148,5 @@ def process_args():
                         required=True,
                         help="The input data dir. Should contain the .tsv files (or other data files) for the task.")
 
-    args = parser.parse_args()
+    args, _ = parser.parse_known_args()
     return args

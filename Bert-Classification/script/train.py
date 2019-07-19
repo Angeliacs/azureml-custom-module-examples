@@ -104,9 +104,6 @@ def convert_examples_to_features(examples, label_list, max_seq_length,
         tokens_b = None
         if example.text_b:
             tokens_b = tokenizer.tokenize(example.text_b)
-            # Modifies `tokens_a` and `tokens_b` in place so that the total
-            # length is less than the specified length.
-            # Account for [CLS], [SEP], [SEP] with "- 3"
             _truncate_seq_pair(tokens_a, tokens_b, max_seq_length - 3)
         else:
             # Account for [CLS] and [SEP] with "- 2"
@@ -149,10 +146,6 @@ def convert_examples_to_features(examples, label_list, max_seq_length,
 def _truncate_seq_pair(tokens_a, tokens_b, max_length):
     """Truncates a sequence pair in place to the maximum length."""
 
-    # This is a simple heuristic which will always truncate the longer sequence
-    # one token at a time. This makes more sense than truncating an equal percent
-    # of tokens from each, since if one sequence is very short then each token
-    # that's truncated likely contains more information than a longer sequence.
     while True:
         total_length = len(tokens_a) + len(tokens_b)
         if total_length <= max_length:
@@ -217,8 +210,6 @@ def main():
     train_examples, label_list, num_labels = load_features(args.train_file)
     train_features = convert_examples_to_features(
         train_examples, label_list, args.max_seq_length, tokenizer)
-
-    print("---------------tokenizer--------------------")
 
     # Prepare model
     cache_dir = args.cache_dir if args.cache_dir else os.path.join(str(PYTORCH_PRETRAINED_BERT_CACHE),
@@ -288,8 +279,6 @@ def main():
             loss_fct = CrossEntropyLoss()
             loss = loss_fct(logits.view(-1, num_labels), label_ids.view(-1))
 
-            # if n_gpu > 1:
-            #     loss = loss.mean() # mean() to average on multi-gpu.
             if args.gradient_accumulation_steps > 1:
                 loss = loss / args.gradient_accumulation_steps
 
@@ -303,8 +292,6 @@ def main():
             nb_tr_steps += 1
             if (step + 1) % args.gradient_accumulation_steps == 0:
                 if args.fp16:
-                    # modify learning rate with special warm up BERT uses
-                    # if args.fp16 is False, BertAdam is used that handles this automatically
                     lr_this_step = args.learning_rate * warmup_linear.get_lr(global_step, args.warmup_proportion)
                     for param_group in optimizer.param_groups:
                         param_group['lr'] = lr_this_step
@@ -329,6 +316,30 @@ def main():
                     "max_seq_length": args.max_seq_length, "num_labels": len(label_list),
                     "label_map": label_map}
     json.dump(model_config, open(os.path.join(args.output_dir, "model_config.json"), "w"))
+
+    # Dump data_type.json as a work around until SMT deploys
+    dct = {
+        "Id": "ILearnerDotNet",
+        "Name": "ILearner .NET file",
+        "ShortName": "Model",
+        "Description": "A .NET serialized ILearner",
+        "IsDirectory": False,
+        "Owner": "Microsoft Corporation",
+        "FileExtension": "ilearner",
+        "ContentType": "application/octet-stream",
+        "AllowUpload": False,
+        "AllowPromotion": False,
+        "AllowModelPromotion": True,
+        "AuxiliaryFileExtension": None,
+        "AuxiliaryContentType": None
+    }
+    with open(os.path.join(args.output_dir, 'data_type.json'), 'w') as f:
+        json.dump(dct, f)
+
+    # Dump data.ilearner as a work around until data type design
+    visualization = os.path.join(args.output_dir, "data.ilearner")
+    with open(visualization, 'w') as file:
+        file.writelines('{}')
 
 
 if __name__ == "__main__":

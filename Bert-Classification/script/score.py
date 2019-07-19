@@ -5,12 +5,14 @@ from __future__ import absolute_import, division, print_function
 import json
 import logging
 import os
-import pickle
+import itertools
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import pyarrow.parquet as pq
 import torch
+import torch.nn.functional as F
 from azureml.core.run import Run
 from pytorch_pretrained_bert.file_utils import WEIGHTS_NAME, CONFIG_NAME
 from pytorch_pretrained_bert.modeling import BertForSequenceClassification, BertConfig
@@ -26,7 +28,7 @@ from torch.utils.data import (DataLoader, SequentialSampler,
                               TensorDataset)
 from tqdm import tqdm
 
-from .args_util import predict_args
+from args_util import predict_args
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s -   %(message)s',
@@ -54,9 +56,28 @@ class Classification:
         tokenizer = BertTokenizer.from_pretrained(model_config["bert_model"], do_lower_case=model_config["do_lower"])
         return model, tokenizer, model_config
 
-    def predict(self, eval_dataloader, data_frame):
+    def predict(self, str):
+        tokenizer = self.tokenizer
+        model = self.model
+        max_seq_length = self.max_seq_length
+
+        model.to(device)
+        eval_examples, label_list, num_labels, text_list, y_true = load_features(args.dev_file)
+        eval_features = convert_examples_to_features(
+            eval_examples, max_seq_length, tokenizer, model_class.label_map)
+
+        all_input_ids = torch.tensor([f.input_ids for f in eval_features], dtype=torch.long)
+        all_input_mask = torch.tensor([f.input_mask for f in eval_features], dtype=torch.long)
+        all_segment_ids = torch.tensor([f.segment_ids for f in eval_features], dtype=torch.long)
+
+        eval_data = TensorDataset(all_input_ids, all_input_mask, all_segment_ids)
+        eval_sampler = SequentialSampler(eval_data)
+        eval_dataloader = DataLoader(eval_data, sampler=eval_sampler, batch_size=args.eval_batch_size)
+
         model.eval()
         preds = []
+        preds_prob = []
+        count = 0
 
         for input_ids, input_mask, segment_ids in tqdm(eval_dataloader, desc="Evaluating"):
             input_ids = input_ids.to(device)
@@ -65,20 +86,28 @@ class Classification:
 
             with torch.no_grad():
                 logits = model(input_ids, segment_ids, input_mask, labels=None)
-            if len(preds) == 0:
-                preds.append(logits.detach().cpu().numpy())
+                output = F.softmax(logits, dim=1)
+                probability, predicted = torch.max(output, 1)
+                size_num = predicted.size()[0]
+                preds.append(predicted.view(size_num).cpu().numpy().tolist())
+                preds_prob.append(probability.view(size_num).cpu().numpy().tolist())
+
+            if count == 2:
+                break
             else:
-                preds[0] = np.append(preds[0], logits.detach().cpu().numpy(), axis=0)
+                count += 1
 
-        preds_prob = preds[0]
-        preds = np.argmax(preds_prob, axis=1)
-        data_frame['Scored Label'] = preds
-        data_frame['Scored Prob'] = preds_prob
-        print("preds", preds)
+        if len(y_true) == 0:
+            data = {'Text': text_list, 'Scored Label': list(itertools.chain(*preds)), 'Scored Prob': list(itertools.chain(*preds_prob))}
+        else:
+            data = {'Text': text_list, 'Label': y_true, 'Scored Label': list(itertools.chain(preds)), 'Scored Prob': list(itertools.chain(preds_prob))}
 
-        if len(label_list) != 0:
-            evaluation(all_label_ids.numpy(), preds, preds_prob, args.output_dir)
+        print(len(data['Text']), len(data['Scored Label']), len(data['Scored Prob']))
+        import pandas as pd
+        data_frame = pd.DataFrame(data)
+
         return data_frame
+
 
 class InputFeatures(object):
     """A single set of features of data."""
@@ -268,6 +297,7 @@ def evaluation(df_true, df_predict, df_prob, output_eval_dir):
     run.log_image("ROC curve", plot=f3_plt)
     f3_plt.savefig(os.path.join(output_eval_dir, 'roc.png'))
 
+
 def load_features(feature_dir, example_file: str = "examples", feature_config_file: str = "feature_config.json"):
     import pickle
     with open(os.path.join(feature_dir, example_file), "rb") as f:
@@ -287,9 +317,9 @@ def load_features(feature_dir, example_file: str = "examples", feature_config_fi
 
     return examples, label_list, nums_labels, text_list, y_true
 
+
 if __name__ == "__main__":
     args = predict_args()
-
     if args.local_rank == -1 or args.no_cuda:
         device = torch.device("cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu")
     else:
@@ -305,31 +335,82 @@ if __name__ == "__main__":
     model_class = Classification(args.trained_model_dir)
     tokenizer = model_class.tokenizer
     model = model_class.model
-    args.max_seq_length = model_class.max_seq_length
+    max_seq_length = model_class.max_seq_length
 
     model.to(device)
     eval_examples, label_list, num_labels, text_list, y_true = load_features(args.dev_file)
     eval_features = convert_examples_to_features(
-        eval_examples, args.max_seq_length, tokenizer, model_class.label_map)
+        eval_examples, max_seq_length, tokenizer, model_class.label_map)
 
     all_input_ids = torch.tensor([f.input_ids for f in eval_features], dtype=torch.long)
     all_input_mask = torch.tensor([f.input_mask for f in eval_features], dtype=torch.long)
     all_segment_ids = torch.tensor([f.segment_ids for f in eval_features], dtype=torch.long)
-    all_label_ids = torch.tensor([f.label_id for f in eval_features], dtype=torch.long)
 
     eval_data = TensorDataset(all_input_ids, all_input_mask, all_segment_ids)
     eval_sampler = SequentialSampler(eval_data)
     eval_dataloader = DataLoader(eval_data, sampler=eval_sampler, batch_size=args.eval_batch_size)
-    if len(y_true) == 0:
-        data = {'text': text_list}
-    else:
-        data = {'text': text_list, 'label': y_true}
 
+    model.eval()
+    preds = []
+    preds_prob = []
+    count = 0
+
+    for input_ids, input_mask, segment_ids in tqdm(eval_dataloader, desc="Evaluating"):
+        input_ids = input_ids.to(device)
+        input_mask = input_mask.to(device)
+        segment_ids = segment_ids.to(device)
+
+        with torch.no_grad():
+            out_df = model_class.predict(pd)
+
+            logits = model(input_ids, segment_ids, input_mask, labels=None)
+            output = F.softmax(logits, dim=1)
+            probability, predicted = torch.max(output, 1)
+            size_num = predicted.size()[0]
+            preds.append(predicted.view(size_num).cpu().numpy().tolist())
+            preds_prob.append(probability.view(size_num).cpu().numpy().tolist())
+
+        if count == 2:
+            break
+        else:
+            count += 1
+
+    if len(y_true) == 0:
+        data = {'Text': text_list, 'Scored Label': list(itertools.chain(*preds)),
+                'Scored Prob': list(itertools.chain(*preds_prob))}
+    else:
+        data = {'Text': text_list, 'Label': y_true, 'Scored Label': list(itertools.chain(preds)),
+                'Scored Prob': list(itertools.chain(preds_prob))}
+
+    print(len(data['Text']), len(data['Scored Label']), len(data['Scored Prob']))
     import pandas as pd
-    frame = pd.DataFrame(data)
-    out_df = model_class.predict(eval_dataloader, frame)
+
+    data_frame = pd.DataFrame(data)
+
+
+
+    print(out_df)
+    headers = out_df.columns.values.tolist()
+
+    if 'Label' in headers:
+        evaluation(out_df['Label'], out_df['Scored Label'], out_df['Scored Prob'], args.output_dir)
     out_df.to_parquet(os.path.join(args.output_dir, 'data.dataset.parquet'))
 
-
-
-
+    # # Dump data_type.json as a work around until SMT deploys
+    # dct = {
+    #     "Id": "Dataset",
+    #     "Name": "Dataset .NET file",
+    #     "ShortName": "Dataset",
+    #     "Description": "A serialized DataTable supporting partial reads and writes",
+    #     "IsDirectory": False,
+    #     "Owner": "Microsoft Corporation",
+    #     "FileExtension": "dataset.parquet",
+    #     "ContentType": "application/octet-stream",
+    #     "AllowUpload": False,
+    #     "AllowPromotion": True,
+    #     "AllowModelPromotion": False,
+    #     "AuxiliaryFileExtension": None,
+    #     "AuxiliaryContentType": None
+    # }
+    # with open(os.path.join(args.output_dir, 'data_type.json'), 'w') as f:
+    #     json.dump(dct, f)

@@ -55,9 +55,9 @@ class DataProcessor(object):
         raise NotImplementedError()
 
     @classmethod
-    def _read_tsv(cls, input_file):
+    def _read_tsv(cls, df):
         """Reads a tab separated value file."""
-        df = pd.read_parquet(os.path.join(input_file, 'data.dataset.parquet'), engine='pyarrow')
+
         lines = []
         for index, row in df.iterrows():
             if sys.version_info[0] == 2:
@@ -98,15 +98,34 @@ class Processor(DataProcessor):
 def main():
     args = process_args()
     processor = Processor()
+    dataframe = pd.read_parquet(os.path.join(args.input_file, 'data.dataset.parquet'), engine='pyarrow')
+    examples, label_list, num_labels = processor.get_examples(dataframe)
 
-    print("---------------tokenizer--------------------")
-    examples, label_list, num_labels = processor.get_examples(args.input_file)
     if not os.path.isdir(args.output_dir):
         os.makedirs(args.output_dir)
     with open(os.path.join(args.output_dir, "examples"), "wb") as f:
         pickle.dump(examples, f)
     features_data = {"label_list": label_list, "num_labels": num_labels}
     json.dump(features_data, open(os.path.join(args.output_dir, "feature_config.json"), "w"))
+
+    # Dump data_type.json as a work around until SMT deploys
+    dct = {
+        "Id": "Dataset",
+        "Name": "Dataset .NET file",
+        "ShortName": "Dataset",
+        "Description": "A serialized DataTable supporting partial reads and writes",
+        "IsDirectory": False,
+        "Owner": "Microsoft Corporation",
+        "FileExtension": "dataset.parquet",
+        "ContentType": "application/octet-stream",
+        "AllowUpload": False,
+        "AllowPromotion": True,
+        "AllowModelPromotion": False,
+        "AuxiliaryFileExtension": None,
+        "AuxiliaryContentType": None
+    }
+    with open(os.path.join(args.output_dir, 'data_type.json'), 'w') as f:
+        json.dump(dct, f)
 
 
 if __name__ == "__main__":
