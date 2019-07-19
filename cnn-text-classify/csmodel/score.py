@@ -55,6 +55,7 @@ class Predictor():
                 output_prob.append(probability.view(1).cpu().numpy()[0])
             data_frame['Scored Label'] = output_label
             data_frame['Scored Prob'] = output_prob
+        data_frame.drop(['text_id'], axis=1, inplace=True)
 
         return data_frame
 
@@ -134,7 +135,6 @@ if __name__ == '__main__':
     parquet_path = os.path.join(args.predict_path, 'data.dataset.parquet')
     df = pd.read_parquet(parquet_path, engine='pyarrow')
     out_df = predictor.predict(df)
-    out_df.drop(['text_id'], axis=1, inplace=True)
     out_df.to_parquet(os.path.join(args.predict_result_path, 'data.dataset.parquet'))
 
     headers = df.columns.values.tolist()
