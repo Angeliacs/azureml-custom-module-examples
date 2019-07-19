@@ -55,7 +55,7 @@ implementation:
     command:
     - python
     - -m
-    - script.trainer
+    - script.train
     - --do_lower_case
     args:
     - --bert_model
