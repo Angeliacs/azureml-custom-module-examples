@@ -1,5 +1,5 @@
-name: TextCNN Train Model
-id:
+name: Semantic Analysis Train
+id: 70673e60-0d5e-4ae8-abaf-b35ca590351a
 category: Machine Learning\Train
 description: Trains a Bert model in a supervised manner
 inputs:
@@ -48,13 +48,14 @@ implementation:
         - pyarrow==0.12.1
         - nltk==3.4
         - numpy==1.16.2
+        - pytorch-pretrained-bert==0.6.2
         - https://download.pytorch.org/whl/cu100/torch-1.1.0-cp36-cp36m-linux_x86_64.whl
         - torchvision==0.2.2.post3
-        - git+https://github.com/Angeliacs/azureml-custom-module-examples.git@master#subdirectory=cnn-text-classify
+        - git+https://github.com/Angeliacs/azureml-custom-module-examples.git@chsi/bert-classification#subdirectory=Bert-Classification
     command:
     - python
     - -m
-    - csmodel.trainer
+    - script.trainer
     args:
     - --do_lower_case
     - --bert_model

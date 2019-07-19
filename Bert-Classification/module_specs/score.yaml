@@ -1,5 +1,5 @@
 name: Semantic Analysis Score
-id:
+id: 589d7944-e6f1-467d-b6bc-d33812546a9f
 category: Machine Learning\Score
 description: Predict the classes through the trained Bert model
 inputs:
@@ -39,7 +39,7 @@ implementation:
         - tqdm==4.31.1
         - https://download.pytorch.org/whl/cu100/torch-1.1.0-cp36-cp36m-linux_x86_64.whl
         - torchvision==0.2.2.post3
-        - git+https://github.com/Angeliacs/azureml-custom-module-examples.git@master#subdirectory=cnn-text-classify
+        - git+https://github.com/Angeliacs/azureml-custom-module-examples.git@chsi/bert-classification#subdirectory=Bert-Classification
     command:
     - python
     - -m

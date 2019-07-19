@@ -1,5 +1,5 @@
 name: Semantic Analysis Process
-id:
+id: e495fef6-c020-47d4-a244-e7be15428be0
 category: Machine Learning\Preprocess
 description: Semantic Analysis Process
 inputs:
@@ -31,11 +31,11 @@ implementation:
         - pytorch-pretrained-bert==0.6.2
         - https://download.pytorch.org/whl/cu100/torch-1.1.0-cp36-cp36m-linux_x86_64.whl
         - torchvision==0.2.2.post3
-        - git+https://github.com/Angeliacs/azureml-custom-module-examples.git@master#subdirectory=cnn-text-classify
+        - git+https://github.com/Angeliacs/azureml-custom-module-examples.git@chsi/bert-classification#subdirectory=Bert-Classification
     command:
     - python
     - -m
-    - csmodel.preprocess_data
+    - script.preprocess_data
     args:
     - --input_file
     - inputValue: Input text
