@@ -21,7 +21,7 @@ from torch.nn import CrossEntropyLoss
 from torch.utils.data import (DataLoader, RandomSampler, TensorDataset)
 from tqdm import tqdm, trange
 
-from args_util import train_args
+from .args_util import train_args
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s -   %(message)s',

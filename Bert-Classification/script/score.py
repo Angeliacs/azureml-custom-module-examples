@@ -26,7 +26,7 @@ from torch.utils.data import (DataLoader, SequentialSampler,
                               TensorDataset)
 from tqdm import tqdm
 
-from args_util import predict_args
+from .args_util import predict_args
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s -   %(message)s',
