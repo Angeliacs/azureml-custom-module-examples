@@ -56,8 +56,8 @@ implementation:
     - python
     - -m
     - script.trainer
-    args:
     - --do_lower_case
+    args:
     - --bert_model
     - inputValue: Bert model
     - --max_seq_length
