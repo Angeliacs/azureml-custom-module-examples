@@ -35,13 +35,13 @@ implementation:
     command:
     - python
     - -m
-    - script.preprocess_data
+    - script.processor
     args:
     - --input_file
     - inputValue: Input text
     - --output_data
     - outputPath: Processed data
   invoking:
-    module: script.preprocess_data
+    module: script.processor
     class: Processor
     func: get_examples
