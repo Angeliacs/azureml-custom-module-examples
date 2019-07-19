@@ -1,0 +1,73 @@
+name: TextCNN Train Model
+id:
+category: Machine Learning\Train
+description: Trains a Bert model in a supervised manner
+inputs:
+- name: Train data file
+  type: TabularDataFolder
+  port: True
+  description: Training data
+- name: Bert model
+  default: bert-base-uncased
+  type: String
+  description: Bert model
+- name: Max seq Length
+  default: 50
+  type: Int
+  description: Max seq Length
+- name: Batch size
+  default: 32
+  type: Int
+  description: Batch size
+- name: Learning rate
+  default: 0.1
+  type: Float
+  description: Learning rate
+- name: Epoch num
+  default: 1
+  type: Int
+  description: Epoch num
+outputs:
+- name: Trained model
+  type: ModelFolder
+  description: Trained learner
+implementation:
+  container:
+    runConfig:
+      baseDockerImage: mcr.microsoft.com/azureml/base-gpu:intelmpi2018.3-cuda10.0-cudnn7-ubuntu16.04
+      gpuSupport: true
+    conda:
+      name: project_environment
+      channels:
+      - defaults
+      dependencies:
+      - python=3.6.8
+      - pip:
+        - --extra-index-url=https://test.pypi.org/simple
+        - alghost==0.0.53
+        - pyarrow==0.12.1
+        - nltk==3.4
+        - numpy==1.16.2
+        - https://download.pytorch.org/whl/cu100/torch-1.1.0-cp36-cp36m-linux_x86_64.whl
+        - torchvision==0.2.2.post3
+        - git+https://github.com/Angeliacs/azureml-custom-module-examples.git@master#subdirectory=cnn-text-classify
+    command:
+    - python
+    - -m
+    - csmodel.trainer
+    args:
+    - --do_lower_case
+    - --bert_model
+    - inputValue: Bert model
+    - --max_seq_length
+    - inputValue: Max seq Length
+    - --train_batch_size
+    - inputValue: Batch size
+    - --train_file
+    - inputValue: Train data file
+    - --learning_rate
+    - inputValue: Learning rate
+    - --num_train_epochs
+    - inputValue: Epoch num
+    - --output_dir
+    - outputPath: Trained model
