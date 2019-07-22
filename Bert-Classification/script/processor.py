@@ -37,16 +37,6 @@ class InputExample(object):
         self.label = label
 
 
-class InputFeatures(object):
-    """A single set of features of data."""
-
-    def __init__(self, input_ids, input_mask, segment_ids, label_id):
-        self.input_ids = input_ids
-        self.input_mask = input_mask
-        self.segment_ids = segment_ids
-        self.label_id = label_id
-
-
 class DataProcessor(object):
     """Base class for data converters for sequence classification data sets."""
 
@@ -88,18 +78,22 @@ class Processor(DataProcessor):
                 examples.append(
                     InputExample(text_a=text_a, text_b=None, label=label))
                 labels.append(label)
+
             except:
                 examples.append(
                     InputExample(text_a=text_a, text_b=None))
 
-        return examples, list(set(labels)), len(set(labels))
+        return [examples, list(set(labels)), len(set(labels))]
 
 
 def main():
     args = process_args()
     processor = Processor()
     dataframe = pd.read_parquet(os.path.join(args.input_file, 'data.dataset.parquet'), engine='pyarrow')
-    examples, label_list, num_labels = processor.get_examples(dataframe)
+    datas = processor.get_examples(dataframe)
+    examples = datas[0]
+    label_list = datas[1]
+    num_labels = datas[2]
 
     if not os.path.isdir(args.output_dir):
         os.makedirs(args.output_dir)
