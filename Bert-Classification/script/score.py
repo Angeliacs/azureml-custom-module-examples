@@ -8,14 +8,13 @@ import os
 import pickle
 
 import matplotlib.pyplot as plt
-import numpy as np
 import pyarrow.parquet as pq
 import torch
+import torch.nn.functional as F
 from azureml.core.run import Run
 from pytorch_pretrained_bert.file_utils import WEIGHTS_NAME, CONFIG_NAME
 from pytorch_pretrained_bert.modeling import BertForSequenceClassification, BertConfig
 from pytorch_pretrained_bert.tokenization import BertTokenizer
-from scipy.stats import pearsonr, spearmanr
 from sklearn.metrics import auc
 from sklearn.metrics import average_precision_score
 from sklearn.metrics import precision_recall_curve
@@ -36,6 +35,7 @@ logging.info(f"Load pyarrow.parquet explicitly: {pq}")
 
 
 class Classification:
+    # todo : support batch input
     def __init__(self, model_dir: str):
         self.model, self.tokenizer, self.model_config = self.load_model(model_dir)
         self.label_map = self.model_config["label_map"]
@@ -54,9 +54,30 @@ class Classification:
         tokenizer = BertTokenizer.from_pretrained(model_config["bert_model"], do_lower_case=model_config["do_lower"])
         return model, tokenizer, model_config
 
-    def predict(self, eval_dataloader, data_frame):
+    def build_data_loader(self, data_frame):
+        features = []
+        for index, row in data_frame.iterrows():
+            # todo: write a preprocessor class or modify preprocess_input as a method in class
+            text = row['text']
+            inputs_ids, input_mask, segment_ids = preprocess_input(self.max_seq_length, self.tokenizer, text)
+            features.append(InputFeatures(
+                input_ids=inputs_ids,
+                input_mask=input_mask,
+                segment_ids=segment_ids))
+        all_input_ids = torch.tensor([f.input_ids for f in features], dtype=torch.long)
+        all_input_mask = torch.tensor([f.input_mask for f in features], dtype=torch.long)
+        all_segment_ids = torch.tensor([f.segment_ids for f in features], dtype=torch.long)
+
+        eval_data = TensorDataset(all_input_ids, all_input_mask, all_segment_ids)
+        eval_sampler = SequentialSampler(eval_data)
+        eval_dataloader = DataLoader(eval_data, sampler=eval_sampler, batch_size=args.eval_batch_size)
+        return eval_dataloader
+
+    def predict(self, data_frame):
         model.eval()
+        probs = []
         preds = []
+        eval_dataloader = self.build_data_loader(data_frame)
 
         for input_ids, input_mask, segment_ids in tqdm(eval_dataloader, desc="Evaluating"):
             input_ids = input_ids.to(device)
@@ -65,29 +86,31 @@ class Classification:
 
             with torch.no_grad():
                 logits = model(input_ids, segment_ids, input_mask, labels=None)
-            if len(preds) == 0:
-                preds.append(logits.detach().cpu().numpy())
-            else:
-                preds[0] = np.append(preds[0], logits.detach().cpu().numpy(), axis=0)
+                output = F.softmax(logits, dim=1)
+                # general classification logic to generate scored label
+                probability, predicted = torch.max(output, 1)
+                batch_num = predicted.size()[0]
+                preds.append(predicted.view(batch_num).cpu().numpy()[0])
+                probs.append(probability.view(batch_num).cpu().numpy()[0])
+            data_frame['Scored Label'] = preds
+            data_frame['Scored Prob'] = probs
 
-        preds_prob = preds[0]
-        preds = np.argmax(preds_prob, axis=1)
-        data_frame['Scored Label'] = preds
-        data_frame['Scored Prob'] = preds_prob
-        print("preds", preds)
-
-        if len(label_list) != 0:
-            evaluation(all_label_ids.numpy(), preds, preds_prob, args.output_dir)
         return data_frame
+
+    def serving_inter(self, dataframe):
+        scored_df = pd.DataFrame()
+        text_list = dataframe['text'].tolist()
+        # todo: call predict and build dataframe
+        return scored_df
+
 
 class InputFeatures(object):
     """A single set of features of data."""
 
-    def __init__(self, input_ids, input_mask, segment_ids, label_id):
+    def __init__(self, input_ids, input_mask, segment_ids):
         self.input_ids = input_ids
         self.input_mask = input_mask
         self.segment_ids = segment_ids
-        self.label_id = label_id
 
 
 class InputExample(object):
@@ -111,49 +134,49 @@ class InputExample(object):
         self.label = label
 
 
-def convert_examples_to_features(examples, max_seq_length, tokenizer, label_map):
+def preprocess_input(max_seq_length, tokenizer, text_a, text_b=None):
+    tokens_a = tokenizer.tokenize(text_a)
+    tokens_b = None
+    if text_b:
+        tokens_b = tokenizer.tokenize(text_b)
+        _truncate_seq_pair(tokens_a, tokens_b, max_seq_length - 3)
+    else:
+        if len(tokens_a) > max_seq_length - 2:
+            tokens_a = tokens_a[:(max_seq_length - 2)]
+
+    tokens = ["[CLS]"] + tokens_a + ["[SEP]"]
+    segment_ids = [0] * len(tokens)
+
+    if tokens_b:
+        tokens += tokens_b + ["[SEP]"]
+        segment_ids += [1] * (len(tokens_b) + 1)
+    input_ids = tokenizer.convert_tokens_to_ids(tokens)
+    input_mask = [1] * len(input_ids)
+    padding = [0] * (max_seq_length - len(input_ids))
+    input_ids += padding
+    input_mask += padding
+    segment_ids += padding
+    assert len(input_ids) == max_seq_length
+    assert len(input_mask) == max_seq_length
+    assert len(segment_ids) == max_seq_length
+    return input_ids, input_mask, segment_ids
+
+
+# todo: does tokens_b in corpus?
+# if so, how to define ds input?
+def convert_examples_to_features(examples, max_seq_length, tokenizer):
     """Loads a data file into a list of `InputBatch`s."""
 
     features = []
     for (ex_index, example) in enumerate(examples):
-        tokens_a = tokenizer.tokenize(example.text_a)
-
-        tokens_b = None
-        if example.text_b:
-            tokens_b = tokenizer.tokenize(example.text_b)
-            _truncate_seq_pair(tokens_a, tokens_b, max_seq_length - 3)
-        else:
-            # Account for [CLS] and [SEP] with "- 2"
-            if len(tokens_a) > max_seq_length - 2:
-                tokens_a = tokens_a[:(max_seq_length - 2)]
-
-        tokens = ["[CLS]"] + tokens_a + ["[SEP]"]
-        segment_ids = [0] * len(tokens)
-
-        if tokens_b:
-            tokens += tokens_b + ["[SEP]"]
-            segment_ids += [1] * (len(tokens_b) + 1)
-
-        input_ids = tokenizer.convert_tokens_to_ids(tokens)
-
-        input_mask = [1] * len(input_ids)
-
-        padding = [0] * (max_seq_length - len(input_ids))
-        input_ids += padding
-        input_mask += padding
-        segment_ids += padding
-
-        assert len(input_ids) == max_seq_length
-        assert len(input_mask) == max_seq_length
-        assert len(segment_ids) == max_seq_length
-
-        label_id = label_map[example.label]
+        text_a = example.text_a
+        text_b = example.text_b or None
+        inputs_ids, input_mask, segment_ids = preprocess_input(max_seq_length, tokenizer, text_a, text_b)
 
         features.append(InputFeatures(
-            input_ids=input_ids,
+            input_ids=inputs_ids,
             input_mask=input_mask,
-            segment_ids=segment_ids,
-            label_id=label_id))
+            segment_ids=segment_ids))
     return features
 
 
@@ -168,35 +191,6 @@ def _truncate_seq_pair(tokens_a, tokens_b, max_length):
             tokens_a.pop()
         else:
             tokens_b.pop()
-
-
-def simple_accuracy(preds, labels):
-    return (preds == labels).mean()
-
-
-def acc_and_f1(preds, labels):
-    acc = simple_accuracy(preds, labels)
-    f1 = f1_score(y_true=labels, y_pred=preds)
-    return {
-        "acc": acc,
-        "f1": f1,
-        "acc_and_f1": (acc + f1) / 2,
-    }
-
-
-def pearson_and_spearman(preds, labels):
-    pearson_corr = pearsonr(preds, labels)[0]
-    spearman_corr = spearmanr(preds, labels)[0]
-    return {
-        "pearson": pearson_corr,
-        "spearmanr": spearman_corr,
-        "corr": (pearson_corr + spearman_corr) / 2,
-    }
-
-
-def compute_metrics(preds, labels):
-    assert len(preds) == len(labels)
-    return {"acc": simple_accuracy(preds, labels)}
 
 
 def prcurve(df_true, df_predict, df_prob):
@@ -268,6 +262,7 @@ def evaluation(df_true, df_predict, df_prob, output_eval_dir):
     run.log_image("ROC curve", plot=f3_plt)
     f3_plt.savefig(os.path.join(output_eval_dir, 'roc.png'))
 
+
 def load_features(feature_dir, example_file: str = "examples", feature_config_file: str = "feature_config.json"):
     import pickle
     with open(os.path.join(feature_dir, example_file), "rb") as f:
@@ -286,6 +281,7 @@ def load_features(feature_dir, example_file: str = "examples", feature_config_fi
     nums_labels = feature_config["num_labels"]
 
     return examples, label_list, nums_labels, text_list, y_true
+
 
 if __name__ == "__main__":
     args = predict_args()
@@ -308,28 +304,26 @@ if __name__ == "__main__":
     args.max_seq_length = model_class.max_seq_length
 
     model.to(device)
-    eval_examples, label_list, num_labels, text_list, y_true = load_features(args.dev_file)
-    eval_features = convert_examples_to_features(
-        eval_examples, args.max_seq_length, tokenizer, model_class.label_map)
 
-    all_input_ids = torch.tensor([f.input_ids for f in eval_features], dtype=torch.long)
-    all_input_mask = torch.tensor([f.input_mask for f in eval_features], dtype=torch.long)
-    all_segment_ids = torch.tensor([f.segment_ids for f in eval_features], dtype=torch.long)
-    all_label_ids = torch.tensor([f.label_id for f in eval_features], dtype=torch.long)
+    with open(os.path.join(args.dev_file, "examples"), "rb") as f:
+        examples = pickle.load(f)
 
-    eval_data = TensorDataset(all_input_ids, all_input_mask, all_segment_ids)
-    eval_sampler = SequentialSampler(eval_data)
-    eval_dataloader = DataLoader(eval_data, sampler=eval_sampler, batch_size=args.eval_batch_size)
-    if len(y_true) == 0:
+    text_list = [example.text_a for example in examples]
+    y_true = []
+    if examples[0].label:
+        y_true = [example.label for example in examples]
+
+    if y_true:
         data = {'text': text_list}
     else:
         data = {'text': text_list, 'label': y_true}
-
     import pandas as pd
+
     frame = pd.DataFrame(data)
-    out_df = model_class.predict(eval_dataloader, frame)
-    out_df.to_parquet(os.path.join(args.output_dir, 'data.dataset.parquet'))
+    out_frame = Classification.predict(frame)
 
+    headers = out_frame.columns.values.tolist()
+    if 'label' in headers:
+        evaluation(out_frame['label'], out_frame['Scored Label'], out_frame['Scored Prob'], args.output_dir)
 
-
-
+    out_frame.to_parquet(os.path.join(args.output_dir, 'data.dataset.parquet'))
