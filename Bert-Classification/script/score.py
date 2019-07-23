@@ -25,7 +25,7 @@ from torch.utils.data import (DataLoader, SequentialSampler,
                               TensorDataset)
 from tqdm import tqdm
 
-from args_util import predict_args
+from .args_util import predict_args
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s -   %(message)s',
@@ -99,7 +99,7 @@ class Classification:
         preds = []
 
         examples = examples[0]
-        text_list = [example.text_a for example in examples[:10]]
+        text_list = [example.text_a for example in examples]
         y_true = []
         if examples[0].label != None:
             y_true = [example.label for example in examples]
