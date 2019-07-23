@@ -59,11 +59,11 @@ class DataProcessor(object):
 class Processor(DataProcessor):
     """Processor for the SST-2 data set (GLUE version)."""
 
-    def get_examples(self, file):
+    def get_examples(self, dataframe):
         """See base class."""
         # print(self._read_tsv(train_file))
         return self._create_examples(
-            self._read_tsv(file))
+            self._read_tsv(dataframe))
 
     def _create_examples(self, lines):
         """Creates examples for the training and dev sets."""

@@ -98,7 +98,7 @@ class Classification:
         probs = []
         preds = []
 
-        # examples = examples[0]
+        examples = examples[0]
         text_list = [example.text_a for example in examples]
         y_true = []
         if examples[0].label != 'None':
@@ -305,7 +305,7 @@ if __name__ == "__main__":
         device = torch.device("cuda", args.local_rank)
         torch.distributed.init_process_group(backend='nccl')
 
-    if os.path.exists(args.output_dir) and os.listdir(args.output_dir) and args.do_train:
+    if os.path.exists(args.output_dir) and os.listdir(args.output_dir):
         raise ValueError("Output directory ({}) already exists and is not empty.".format(args.output_dir))
     if not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir)
@@ -323,6 +323,7 @@ if __name__ == "__main__":
     print(out_frame)
 
     headers = out_frame.columns.values.tolist()
+    print(headers)
     if 'label' in headers:
         evaluation(out_frame['label'], out_frame['Scored Label'], out_frame['Scored Prob'], args.output_dir)
 
