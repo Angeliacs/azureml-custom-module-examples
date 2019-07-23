@@ -25,7 +25,7 @@ from torch.utils.data import (DataLoader, SequentialSampler,
                               TensorDataset)
 from tqdm import tqdm
 
-from .args_util import predict_args
+from args_util import predict_args
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s -   %(message)s',
@@ -99,11 +99,12 @@ class Classification:
         preds = []
 
         examples = examples[0]
-        text_list = [example.text_a for example in examples]
+        text_list = [example.text_a for example in examples[:10]]
         y_true = []
-        if examples[0].label != 'None':
+        if examples[0].label != None:
             y_true = [example.label for example in examples]
 
+        print(y_true)
         if len(y_true) == 0:
             data = {'text': text_list}
         else:
@@ -158,7 +159,7 @@ class InputExample(object):
             text_b: (Optional) string. The untokenized text of the second sequence.
             Only must be specified for sequence pair tasks.
             label: (Optional) string. The label of the example. This should be
-            specified for train and dev examples, but not for test examples.
+            specified for train and dev examples_label, but not for test examples_label.
         """
         self.guid = guid
         self.text_a = text_a
@@ -320,7 +321,8 @@ if __name__ == "__main__":
     with open(os.path.join(args.dev_file, "examples"), "rb") as f:
         examples = pickle.load(f)
     out_frame = model_class.predict([examples])
-    print(out_frame)
+
+
 
     headers = out_frame.columns.values.tolist()
     print(headers)
