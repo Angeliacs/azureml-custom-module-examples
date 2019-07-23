@@ -319,7 +319,7 @@ if __name__ == "__main__":
 
     with open(os.path.join(args.dev_file, "examples"), "rb") as f:
         examples = pickle.load(f)
-    out_frame = model_class.predict(examples)
+    out_frame = model_class.predict([examples])
     print(out_frame)
 
     headers = out_frame.columns.values.tolist()
