@@ -4,7 +4,7 @@ category: Machine Learning\Train
 description: Trains a Bert/Xlnet model in a supervised manner
 inputs:
 - name: Train data file
-  type: TabularDataFolder
+  type: GenericFolder
   port: True
   description: Training data
 - name: Model type
