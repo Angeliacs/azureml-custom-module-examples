@@ -52,6 +52,7 @@ implementation:
         - pyarrow==0.12.1
         - numpy==1.16.2
         - pandas==0.24.1
+        - tensorboardX==1.8
         - pytorch-transformers==1.0.0
         - https://download.pytorch.org/whl/cu100/torch-1.1.0-cp36-cp36m-linux_x86_64.whl
         - torchvision==0.2.2.post3

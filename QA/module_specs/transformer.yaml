@@ -4,7 +4,7 @@ category: Machine Learning\Preprocess
 description:  Transform dataframe into json file
 inputs:
 - name: Input text
-  type: GenericFolder
+  type: TabularDataFolder
   port: True
   description: Input text
 outputs:
