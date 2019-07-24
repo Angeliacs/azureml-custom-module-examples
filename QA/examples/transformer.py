@@ -5,7 +5,7 @@ import os
 import pandas as pd
 import pyarrow.parquet as pq
 
-from args_util import process_args
+from .args_util import process_args
 
 logging.info(f"Load pyarrow.parquet explicitly: {pq}")
 
