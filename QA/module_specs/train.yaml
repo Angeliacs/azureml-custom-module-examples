@@ -1,5 +1,5 @@
-name: Reading Comprehension Train
-id: 58fd0061-0e6e-483e-8b3c-4fa5bf0bac4a
+name: QA Train
+id: 4867c3a437de49f99c44b5bb37c7aeb4
 category: Machine Learning\Train
 description: Trains a Bert/Xlnet model in a supervised manner
 inputs:
