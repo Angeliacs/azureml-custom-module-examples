@@ -1,7 +1,6 @@
-name: Reading Comprehension Process
-id: 
+name: QA Process
+id: 3ef71b5e833e4e2791fe061f14f40dd3
 category: Machine Learning\Preprocess
-isDeprecated: True
 description:  Transform dataframe into json file
 inputs:
 - name: Input text
