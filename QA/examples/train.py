@@ -384,37 +384,37 @@ def main():
         # Good practice: save your training arguments together with the trained model
         torch.save(args, os.path.join(args.output_dir, 'training_args.bin'))
 
-        # Load a trained model and vocabulary that you have fine-tuned
-        model = model_class.from_pretrained(args.output_dir)
-        tokenizer = tokenizer_class.from_pretrained(args.output_dir)
-        model.to(args.device)
+        # # Load a trained model and vocabulary that you have fine-tuned
+        # model = model_class.from_pretrained(args.output_dir)
+        # tokenizer = tokenizer_class.from_pretrained(args.output_dir)
+        # model.to(args.device)
 
+    #
+    # # Evaluation - we can ask to evaluate all the checkpoints (sub-directories) in a directory
+    # results = {}
+    # if args.do_eval and args.local_rank in [-1, 0]:
+    #     checkpoints = [args.output_dir]
+    #     if args.eval_all_checkpoints:
+    #         checkpoints = list(os.path.dirname(c) for c in sorted(glob.glob(args.output_dir + '/**/' + WEIGHTS_NAME, recursive=True)))
+    #         logging.getLogger("pytorch_transformers.modeling_utils").setLevel(logging.WARN)  # Reduce model loading logs
+    #
+    #     logger.info("Evaluate the following checkpoints: %s", checkpoints)
+    #
+    #     for checkpoint in checkpoints:
+    #         # Reload the model
+    #         global_step = checkpoint.split('-')[-1] if len(checkpoints) > 1 else ""
+    #         model = model_class.from_pretrained(checkpoint)
+    #         model.to(args.device)
+    #
+    #         # Evaluate
+    #         result = evaluate(args, model, tokenizer, prefix=global_step)
+    #
+    #         result = dict((k + ('_{}'.format(global_step) if global_step else ''), v) for k, v in result.items())
+    #         results.update(result)
+    #
+    # logger.info("Results: {}".format(results))
 
-    # Evaluation - we can ask to evaluate all the checkpoints (sub-directories) in a directory
-    results = {}
-    if args.do_eval and args.local_rank in [-1, 0]:
-        checkpoints = [args.output_dir]
-        if args.eval_all_checkpoints:
-            checkpoints = list(os.path.dirname(c) for c in sorted(glob.glob(args.output_dir + '/**/' + WEIGHTS_NAME, recursive=True)))
-            logging.getLogger("pytorch_transformers.modeling_utils").setLevel(logging.WARN)  # Reduce model loading logs
-
-        logger.info("Evaluate the following checkpoints: %s", checkpoints)
-
-        for checkpoint in checkpoints:
-            # Reload the model
-            global_step = checkpoint.split('-')[-1] if len(checkpoints) > 1 else ""
-            model = model_class.from_pretrained(checkpoint)
-            model.to(args.device)
-
-            # Evaluate
-            result = evaluate(args, model, tokenizer, prefix=global_step)
-
-            result = dict((k + ('_{}'.format(global_step) if global_step else ''), v) for k, v in result.items())
-            results.update(result)
-
-    logger.info("Results: {}".format(results))
-
-    return results
+    # return results
 
 
 if __name__ == "__main__":
