@@ -1,8 +1,13 @@
-import pyarrow.parquet as pq
-from args_util import process_args
-import pandas as pd
-import os
 import json
+import logging
+import os
+
+import pandas as pd
+import pyarrow.parquet as pq
+
+from args_util import process_args
+
+logging.info(f"Load pyarrow.parquet explicitly: {pq}")
 
 
 class DataPreprocessor(object):
@@ -18,7 +23,7 @@ if __name__ == '__main__':
     args = process_args()
 
     processor = DataPreprocessor()
-    input_file_path = os.path.join(args.input_data, 'data.dataset.parquet')
+    input_file_path = os.path.join(args.input_file, 'data.dataset.parquet')
     data_frame = pd.read_parquet(input_file_path, engine='pyarrow')
     data = processor.process(data_frame)
 

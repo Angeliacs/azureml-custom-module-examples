@@ -1,0 +1,47 @@
+name: Reading Comprehension Process
+id:
+category: Machine Learning\Preprocess
+description:  Transform dataframe into json file
+inputs:
+- name: Input text
+  type: TabularDataFolder
+  port: True
+  description: Input text
+outputs:
+- name: Processed data
+  type: GenericFolder
+  description: Processed data
+implementation:
+  container:
+    runConfig:
+      baseDockerImage: mcr.microsoft.com/azureml/base-gpu:intelmpi2018.3-cuda10.0-cudnn7-ubuntu16.04
+      gpuSupport: true
+    conda:
+      name: project_environment
+      channels:
+      - defaults
+      dependencies:
+      - python=3.6.8
+      - pip:
+        - --extra-index-url=https://test.pypi.org/simple
+        - alghost==0.0.53
+        - pyarrow==0.12.1
+        - numpy==1.16.2
+        - pandas==0.24.1
+        - pytorch-transformers==1.0.0
+        - https://download.pytorch.org/whl/cu100/torch-1.1.0-cp36-cp36m-linux_x86_64.whl
+        - torchvision==0.2.2.post3
+        - git+https://github.com/Angeliacs/azureml-custom-module-examples.git@chsi/Bert-QA#subdirectory=QA
+    command:
+    - python
+    - -m
+    - examples.transformer
+    args:
+    - --input_file
+    - inputValue: Input text
+    - --output_data
+    - outputPath: Processed data
+  invoking:
+    module: examples.transformer
+    class: DataPreprocessor
+    func: process

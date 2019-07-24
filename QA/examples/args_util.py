@@ -100,3 +100,11 @@ def train_args():
     parser.add_argument('--server_ip', type=str, default='', help="Can be used for distant debugging.")
     parser.add_argument('--server_port', type=str, default='', help="Can be used for distant debugging.")
     return parser.parse_args()
+
+def process_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--input_file", default=None, type=str, required=True,
+                        help="dataframe")
+    parser.add_argument("--output_dir", default=None, type=str, required=True,
+                        help="json file")
+    return parser.parse_args()
