@@ -39,7 +39,7 @@ implementation:
     args:
     - --input_file
     - inputValue: Input text
-    - --output_data
+    - --output_dir
     - outputPath: Processed data
   invoking:
     module: examples.transformer
