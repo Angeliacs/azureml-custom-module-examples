@@ -136,7 +136,7 @@ def train(args, train_dataset, model, tokenizer):
 
 def load_and_cache_examples(args, tokenizer, evaluate=False, output_examples=False):
     # Load data features from cache or dataset file
-    input_file = args.train_file
+    input_file = args.train_file + "/train.json"
     examples = read_squad_examples(input_file=input_file,
                                    is_training=not evaluate,
                                    version_2_with_negative=args.version_2_with_negative)
@@ -171,12 +171,6 @@ def load_and_cache_examples(args, tokenizer, evaluate=False, output_examples=Fal
 
 def main():
     args = train_args()
-    # if os.path.exists(args.output_dir) and os.listdir(
-    #         args.output_dir) and not args.overwrite_output_dir:
-    #     raise ValueError(
-    #         "Output directory ({}) already exists and is not empty. Use --overwrite_output_dir to overcome.".format(
-    #             args.output_dir))
-
     # Setup distant debugging if needed
     if args.server_ip and args.server_port:
         # Distant debugging - see https://code.visualstudio.com/docs/python/debugging#_attach-to-a-local-script
