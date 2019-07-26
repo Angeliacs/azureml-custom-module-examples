@@ -29,4 +29,6 @@ if __name__ == '__main__':
     data_frame = pd.read_parquet(input_file_path, engine='pyarrow')
     data = processor.process(data_frame)
 
+    if not os.path.exists(args.output_dir):
+        os.makedirs(args.output_dir)
     json.dump(data, open(os.path.join(args.output_dir, 'score.json'), "w"))
