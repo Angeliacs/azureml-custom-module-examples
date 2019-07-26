@@ -136,7 +136,7 @@ def train(args, train_dataset, model, tokenizer):
 
 def load_and_cache_examples(args, tokenizer, evaluate=False, output_examples=False):
     # Load data features from cache or dataset file
-    input_file = args.train_file + "/train.json"
+    input_file = args.train_file + "/json_data/train.json"
     examples = read_squad_examples(input_file=input_file,
                                    is_training=not evaluate,
                                    version_2_with_negative=args.version_2_with_negative)
