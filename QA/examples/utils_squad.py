@@ -1,4 +1,3 @@
-
 # coding=utf-8
 # Copyright 2018 The Google AI Language Team Authors and The HuggingFace Inc. team.
 # Copyright (c) 2018, NVIDIA CORPORATION.  All rights reserved.
@@ -18,16 +17,16 @@
 
 from __future__ import absolute_import, division, print_function
 
+import collections
 import json
 import logging
-import math
-import collections
 from io import open
 
+import math
+import pandas as pd
 from pytorch_transformers.tokenization_bert import BasicTokenizer, whitespace_tokenize
 
 # Required by XLNet evaluation method to compute optimal threshold (see write_predictions_extended() method)
-from .utils_squad_evaluate import find_all_best_thresh_v2, make_qid_to_has_ans, get_raw_scores
 
 logger = logging.getLogger(__name__)
 
@@ -154,14 +153,10 @@ def read_squad_examples(input_file, is_training, version_2_with_negative):
                         orig_answer_text = answer["text"]
                         answer_offset = answer["answer_start"]
                         answer_length = len(orig_answer_text)
+                        if answer_offset + answer_length > len(char_to_word_offset) - 1:
+                            continue
                         start_position = char_to_word_offset[answer_offset]
                         end_position = char_to_word_offset[answer_offset + answer_length - 1]
-                        # Only add answers where the text can be exactly recovered from the
-                        # document. If this CAN'T happen it's likely due to weird Unicode
-                        # stuff so we will just skip the example.
-                        #
-                        # Note that this means for training mode, every example is NOT
-                        # guaranteed to be preserved.
                         actual_text = " ".join(doc_tokens[start_position:(end_position + 1)])
                         cleaned_answer_text = " ".join(
                             whitespace_tokenize(orig_answer_text))
@@ -238,10 +233,6 @@ def convert_examples_to_features(examples, tokenizer, max_seq_length,
 
         # The -3 accounts for [CLS], [SEP] and [SEP]
         max_tokens_for_doc = max_seq_length - len(query_tokens) - 3
-
-        # We can have documents that are longer than the maximum sequence length.
-        # To deal with this we do a sliding window approach, where we take chunks
-        # of the up to our max length with a stride of `doc_stride`.
         _DocSpan = collections.namedtuple(  # pylint: disable=invalid-name
             "DocSpan", ["start", "length"])
         doc_spans = []
@@ -350,31 +341,6 @@ def convert_examples_to_features(examples, tokenizer, max_seq_length,
                 start_position = cls_index
                 end_position = cls_index
 
-            if example_index < 20:
-                logger.info("*** Example ***")
-                logger.info("unique_id: %s" % (unique_id))
-                logger.info("example_index: %s" % (example_index))
-                logger.info("doc_span_index: %s" % (doc_span_index))
-                logger.info("tokens: %s" % " ".join(tokens))
-                logger.info("token_to_orig_map: %s" % " ".join([
-                    "%d:%d" % (x, y) for (x, y) in token_to_orig_map.items()]))
-                logger.info("token_is_max_context: %s" % " ".join([
-                    "%d:%s" % (x, y) for (x, y) in token_is_max_context.items()
-                ]))
-                logger.info("input_ids: %s" % " ".join([str(x) for x in input_ids]))
-                logger.info(
-                    "input_mask: %s" % " ".join([str(x) for x in input_mask]))
-                logger.info(
-                    "segment_ids: %s" % " ".join([str(x) for x in segment_ids]))
-                if is_training and span_is_impossible:
-                    logger.info("impossible example")
-                if is_training and not span_is_impossible:
-                    answer_text = " ".join(tokens[start_position:(end_position + 1)])
-                    logger.info("start_position: %d" % (start_position))
-                    logger.info("end_position: %d" % (end_position))
-                    logger.info(
-                        "answer: %s" % (answer_text))
-
             features.append(
                 InputFeatures(
                     unique_id=unique_id,
@@ -400,29 +366,6 @@ def convert_examples_to_features(examples, tokenizer, max_seq_length,
 def _improve_answer_span(doc_tokens, input_start, input_end, tokenizer,
                          orig_answer_text):
     """Returns tokenized answer spans that better match the annotated answer."""
-
-    # The SQuAD annotations are character based. We first project them to
-    # whitespace-tokenized words. But then after WordPiece tokenization, we can
-    # often find a "better match". For example:
-    #
-    #   Question: What year was John Smith born?
-    #   Context: The leader was John Smith (1895-1943).
-    #   Answer: 1895
-    #
-    # The original whitespace-tokenized answer will be "(1895-1943).". However
-    # after tokenization, our tokens will be "( 1895 - 1943 ) .". So we can match
-    # the exact answer, 1895.
-    #
-    # However, this is not always possible. Consider the following:
-    #
-    #   Question: What country is the top exporter of electornics?
-    #   Context: The Japanese electronics industry is the lagest in the world.
-    #   Answer: Japan
-    #
-    # In this case, the annotator chose "Japan" as a character sub-span of
-    # the word "Japanese". Since our WordPiece tokenizer does not split
-    # "Japanese", we just use "Japanese" as the annotation. This is fairly rare
-    # in SQuAD, but does happen.
     tok_answer_text = " ".join(tokenizer.tokenize(orig_answer_text))
 
     for new_start in range(input_start, input_end + 1):
@@ -474,14 +417,10 @@ def _check_is_max_context(doc_spans, cur_span_index, position):
 RawResult = collections.namedtuple("RawResult",
                                    ["unique_id", "start_logits", "end_logits"])
 
-def write_predictions(all_examples, all_features, all_results, n_best_size,
-                      max_answer_length, do_lower_case, output_prediction_file,
-                      output_nbest_file, output_null_log_odds_file, verbose_logging,
-                      version_2_with_negative, null_score_diff_threshold):
-    """Write final predictions to the json file and log-odds of null if needed."""
-    logger.info("Writing predictions to: %s" % (output_prediction_file))
-    logger.info("Writing nbest to: %s" % (output_nbest_file))
 
+def write_predictions(all_examples, all_features, all_results, n_best_size,
+                      max_answer_length, do_lower_case, verbose_logging=False,
+                      version_2_with_negative=False, null_score_diff_threshold=0.0):
     example_index_to_features = collections.defaultdict(list)
     for feature in all_features:
         example_index_to_features[feature.example_index].append(feature)
@@ -507,6 +446,8 @@ def write_predictions(all_examples, all_features, all_results, n_best_size,
         min_null_feature_index = 0  # the paragraph slice with min null score
         null_start_logit = 0  # the start logit at the slice with min null score
         null_end_logit = 0  # the end logit at the slice with min null score
+        text_list = []
+        answer = []
         for (feature_index, feature) in enumerate(features):
             result = unique_id_to_result[feature.unique_id]
             start_indexes = _get_best_indexes(result.start_logits, n_best_size)
@@ -521,9 +462,6 @@ def write_predictions(all_examples, all_features, all_results, n_best_size,
                     null_end_logit = result.end_logits[0]
             for start_index in start_indexes:
                 for end_index in end_indexes:
-                    # We could hypothetically create invalid predictions, e.g., predict
-                    # that the start of the span is in the question. We throw out all
-                    # invalid predictions.
                     if start_index >= len(feature.tokens):
                         continue
                     if end_index >= len(feature.tokens):
@@ -606,12 +544,12 @@ def write_predictions(all_examples, all_features, all_results, n_best_size,
                         text="",
                         start_logit=null_start_logit,
                         end_logit=null_end_logit))
-                
+
             # In very rare edge cases we could only have single null prediction.
             # So we just create a nonce prediction in this case to avoid failure.
-            if len(nbest)==1:
+            if len(nbest) == 1:
                 nbest.insert(0,
-                    _NbestPrediction(text="empty", start_logit=0.0, end_logit=0.0))
+                             _NbestPrediction(text="empty", start_logit=0.0, end_logit=0.0))
 
         # In very rare edge cases we could have no valid predictions. So we
         # just create a nonce prediction in this case to avoid failure.
@@ -643,43 +581,33 @@ def write_predictions(all_examples, all_features, all_results, n_best_size,
         assert len(nbest_json) >= 1
 
         if not version_2_with_negative:
-            all_predictions[example.qas_id] = nbest_json[0]["text"]
+            all_predictions[example.question_text] = nbest_json[0]["text"]
         else:
             # predict "" iff the null score - the score of best non-null > threshold
             score_diff = score_null - best_non_null_entry.start_logit - (
                 best_non_null_entry.end_logit)
-            scores_diff_json[example.qas_id] = score_diff
+            scores_diff_json[example.question_text] = score_diff
             if score_diff > null_score_diff_threshold:
-                all_predictions[example.qas_id] = ""
+                all_predictions[example.question_text] = ""
             else:
-                all_predictions[example.qas_id] = best_non_null_entry.text
-        all_nbest_json[example.qas_id] = nbest_json
+                all_predictions[example.question_text] = best_non_null_entry.text
+        all_nbest_json[example.question_text] = nbest_json
+        text_list.append(example.question_text)
+        answer.append(nbest_json[0]["text"])
 
-    with open(output_prediction_file, "w") as writer:
-        writer.write(json.dumps(all_predictions, indent=4) + "\n")
-
-    with open(output_nbest_file, "w") as writer:
-        writer.write(json.dumps(all_nbest_json, indent=4) + "\n")
-
-    if version_2_with_negative:
-        with open(output_null_log_odds_file, "w") as writer:
-            writer.write(json.dumps(scores_diff_json, indent=4) + "\n")
-
-    return all_predictions
+    return pd.DataFrame({'question': text_list, 'answer': answer})
 
 
 # For XLNet (and XLM which uses the same head)
 RawResultExtended = collections.namedtuple("RawResultExtended",
-    ["unique_id", "start_top_log_probs", "start_top_index",
-     "end_top_log_probs", "end_top_index", "cls_logits"])
+                                           ["unique_id", "start_top_log_probs", "start_top_index",
+                                            "end_top_log_probs", "end_top_index", "cls_logits"])
 
 
 def write_predictions_extended(all_examples, all_features, all_results, n_best_size,
-                                max_answer_length, output_prediction_file,
-                                output_nbest_file,
-                                output_null_log_odds_file, orig_data_file,
-                                start_n_top, end_n_top, version_2_with_negative,
-                                tokenizer, verbose_logging):
+                               max_answer_length, input_data,
+                               start_n_top, end_n_top, tokenizer,
+                               verbose_logging=False):
     """ XLNet write prediction logic (more complex than Bert's).
         Write final predictions to the json file and log-odds of null if needed.
 
@@ -688,15 +616,14 @@ def write_predictions_extended(all_examples, all_features, all_results, n_best_s
     _PrelimPrediction = collections.namedtuple(  # pylint: disable=invalid-name
         "PrelimPrediction",
         ["feature_index", "start_index", "end_index",
-        "start_log_prob", "end_log_prob"])
+         "start_log_prob", "end_log_prob"])
 
     _NbestPrediction = collections.namedtuple(  # pylint: disable=invalid-name
         "NbestPrediction", ["text", "start_log_prob", "end_log_prob"])
 
-    logger.info("Writing predictions to: %s", output_prediction_file)
-    # logger.info("Writing nbest to: %s" % (output_nbest_file))
-
     example_index_to_features = collections.defaultdict(list)
+    text_list = []
+    answer_list = []
     for feature in all_features:
         example_index_to_features[feature.example_index].append(feature)
 
@@ -810,7 +737,7 @@ def write_predictions_extended(all_examples, all_features, all_results, n_best_s
         if not nbest:
             nbest.append(
                 _NbestPrediction(text="", start_log_prob=-1e6,
-                end_log_prob=-1e6))
+                                 end_log_prob=-1e6))
 
         total_scores = []
         best_non_null_entry = None
@@ -834,35 +761,15 @@ def write_predictions_extended(all_examples, all_features, all_results, n_best_s
         assert best_non_null_entry is not None
 
         score_diff = score_null
-        scores_diff_json[example.qas_id] = score_diff
+        scores_diff_json[example.question_text] = score_diff
         # note(zhiliny): always predict best_non_null_entry
         # and the evaluation script will search for the best threshold
-        all_predictions[example.qas_id] = best_non_null_entry.text
+        all_predictions[example.question_text] = best_non_null_entry.text
+        all_nbest_json[example.question_text] = nbest_json
+        text_list.append(example.question_text)
+        answer_list.append(best_non_null_entry.text)
 
-        all_nbest_json[example.qas_id] = nbest_json
-
-    with open(output_prediction_file, "w") as writer:
-        writer.write(json.dumps(all_predictions, indent=4) + "\n")
-
-    with open(output_nbest_file, "w") as writer:
-        writer.write(json.dumps(all_nbest_json, indent=4) + "\n")
-
-    if version_2_with_negative:
-        with open(output_null_log_odds_file, "w") as writer:
-            writer.write(json.dumps(scores_diff_json, indent=4) + "\n")
-
-    with open(orig_data_file, "r", encoding='utf-8') as reader:
-        orig_data = json.load(reader)["data"]
-
-    qid_to_has_ans = make_qid_to_has_ans(orig_data)
-    has_ans_qids = [k for k, v in qid_to_has_ans.items() if v]
-    no_ans_qids = [k for k, v in qid_to_has_ans.items() if not v]
-    exact_raw, f1_raw = get_raw_scores(orig_data, all_predictions)
-    out_eval = {}
-
-    find_all_best_thresh_v2(out_eval, all_predictions, exact_raw, f1_raw, scores_diff_json, qid_to_has_ans)
-
-    return out_eval
+    return pd.DataFrame({'question': text_list, 'answer': answer_list})
 
 
 def get_final_text(pred_text, orig_text, do_lower_case, verbose_logging=False):

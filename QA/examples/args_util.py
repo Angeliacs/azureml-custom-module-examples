@@ -1,5 +1,21 @@
 import argparse
 
+from pytorch_transformers import (BertConfig,
+                                  BertForQuestionAnswering, BertTokenizer,
+                                  XLMConfig, XLMForQuestionAnswering,
+                                  XLMTokenizer, XLNetConfig,
+                                  XLNetForQuestionAnswering,
+                                  XLNetTokenizer)
+
+ALL_MODELS = sum((tuple(conf.pretrained_config_archive_map.keys()) \
+                  for conf in (BertConfig, XLNetConfig, XLMConfig)), ())
+
+MODEL_CLASSES = {
+    'bert': (BertConfig, BertForQuestionAnswering, BertTokenizer),
+    'xlnet': (XLNetConfig, XLNetForQuestionAnswering, XLNetTokenizer),
+    'xlm': (XLMConfig, XLMForQuestionAnswering, XLMTokenizer),
+}
+
 
 def train_args():
     parser = argparse.ArgumentParser()
@@ -7,12 +23,11 @@ def train_args():
     ## Required parameters
     parser.add_argument("--train_file", default=None, type=str, required=True,
                         help="SQuAD json for training. E.g., train-v1.1.json")
-    parser.add_argument("--predict_file", default=None, type=str, required=True,
-                        help="SQuAD json for predictions. E.g., dev-v1.1.json or test-v1.1.json")
     parser.add_argument("--model_type", default=None, type=str, required=True,
                         help="Model type selected in the list: " + ", ".join(MODEL_CLASSES.keys()))
     parser.add_argument("--model_name_or_path", default=None, type=str, required=True,
-                        help="Path to pre-trained model or shortcut name selected in the list: " + ", ".join(ALL_MODELS))
+                        help="Path to pre-trained model or shortcut name selected in the list: " + ", ".join(
+                            ALL_MODELS))
     parser.add_argument("--output_dir", default=None, type=str, required=True,
                         help="The output directory where the model checkpoints and predictions will be written.")
 
@@ -37,12 +52,6 @@ def train_args():
     parser.add_argument("--max_query_length", default=64, type=int,
                         help="The maximum number of tokens for the question. Questions longer than this will "
                              "be truncated to this length.")
-    parser.add_argument("--do_train", action='store_true',
-                        help="Whether to run training.")
-    parser.add_argument("--do_eval", action='store_true',
-                        help="Whether to run eval on the dev set.")
-    parser.add_argument("--evaluate_during_training", action='store_true',
-                        help="Rul evaluation during training at each logging step.")
     parser.add_argument("--do_lower_case", action='store_true',
                         help="Set this flag if you are using an uncased model.")
 
@@ -101,10 +110,26 @@ def train_args():
     parser.add_argument('--server_port', type=str, default='', help="Can be used for distant debugging.")
     return parser.parse_args()
 
+
 def process_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--input_file", default=None, type=str, required=True,
                         help="dataframe")
     parser.add_argument("--output_dir", default=None, type=str, required=True,
                         help="json file")
+    return parser.parse_args()
+
+
+def predict_args():
+    parser = argparse.ArgumentParser()
+
+    ## Required parameters
+    parser.add_argument("--input_file", default=None, type=str, required=True,
+                        help="SQuAD json for training. E.g., train-v1.1.json")
+    parser.add_argument("--output_dir", default=None, type=str, required=True,
+                        help="The output directory where the model checkpoints and predictions will be written.")
+    parser.add_argument("--per_gpu_eval_batch_size", default=8, type=int,
+                        help="Batch size per GPU/CPU for evaluation.")
+    parser.add_argument("--trained_model", default=None, type=str, required=True,
+                        help="SQuAD json for training. E.g., train-v1.1.json")
     return parser.parse_args()
