@@ -1,0 +1,77 @@
+name: Stargan Train
+id: fb850288-1db5-4a14-9890-55d1fed3ee68
+category: Machine Learning\Train
+description: Creates a stargan train module
+inputs:
+- name: Dataset type
+  type: Mode
+  default: 'RaFD'
+  description: dataset_type
+  options:
+    - 'RaFD'
+    - 'CelebA'
+- name: Evaluate data path
+  type: GenericFolder
+  port: True
+  description: evaluate_data_path
+- name: Train data path
+  type: GenericFolder
+  port: True
+  description: train_data_path
+- name: Image size
+  type: Int
+  default: 128
+  description: image_size
+- name: Label dim
+  type: Int
+  default: 5
+  description: dimension of domain labels
+- name: Number of iterations
+  type: Int
+  default: 10000
+  description: the number of iterations
+- name: Batch size
+  type: Int
+  default: 16
+  description: batch_size
+outputs:
+- name: Save path
+  type: ModelFolder
+  description: save_path
+implementation:
+  container:
+    runConfig:
+      baseDockerImage: mcr.microsoft.com/azureml/base-gpu:intelmpi2018.3-cuda10.0-cudnn7-ubuntu16.04
+      gpuSupport: True
+    conda:
+      name: project_environment
+      channels:
+        - defaults
+      dependencies:
+        - python=3.6.3
+        - pip:
+            - fire==0.1.3
+            - https://download.pytorch.org/whl/cu100/torch-1.1.0-cp36-cp36m-linux_x86_64.whl
+            - https://download.pytorch.org/whl/cu100/torchvision-0.3.0-cp36-cp36m-linux_x86_64.whl
+            - git+https://github.com/zyh911/CustomModules.git@t-yuhazh/add_semantic_segmentation_deeplabv3#subdirectory=semantic-segmentation-deeplabv3
+    command:
+      - python
+      - -m
+      - script.train
+    args:
+      - --dataset
+      - inputValue: Dataset type
+      - --image_train_dir
+      - inputValue: Train Data path
+      - --image_test_dir
+      - inputValue: Evaluate data path
+      - --image_size
+      - inputValue: Image size
+      - --c_dim
+      - inputValue: Label dim
+      - --num_iters
+      - inputValue: Number of iterations
+      - --batch_size
+      - inputValue: Batch size
+      - --save_path
+      - outputPath: Save path
