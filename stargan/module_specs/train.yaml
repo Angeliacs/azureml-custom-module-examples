@@ -50,14 +50,13 @@ implementation:
       dependencies:
         - python=3.6.3
         - pip:
-            - fire==0.1.3
             - https://download.pytorch.org/whl/cu100/torch-1.1.0-cp36-cp36m-linux_x86_64.whl
             - https://download.pytorch.org/whl/cu100/torchvision-0.3.0-cp36-cp36m-linux_x86_64.whl
-            - git+https://github.com/zyh911/CustomModules.git@t-yuhazh/add_semantic_segmentation_deeplabv3#subdirectory=semantic-segmentation-deeplabv3
+            - git+https://github.com/Angeliacs/azureml-custom-module-examples.git@chsi/stargan#subdirectory=stargan
     command:
       - python
       - -m
-      - script.train
+      - script.main
     args:
       - --dataset
       - inputValue: Dataset type
