@@ -10,14 +10,14 @@ inputs:
   options:
     - 'RaFD'
     - 'CelebA'
-- name: Evaluate data path
-  type: GenericFolder
-  port: True
-  description: evaluate_data_path
 - name: Train data path
   type: GenericFolder
   port: True
   description: train_data_path
+- name: Evaluate data path
+  type: GenericFolder
+  port: True
+  description: evaluate_data_path
 - name: Image size
   type: Int
   default: 128
@@ -61,7 +61,7 @@ implementation:
       - --dataset
       - inputValue: Dataset type
       - --image_train_dir
-      - inputValue: Train Data path
+      - inputValue: Train data path
       - --image_test_dir
       - inputValue: Evaluate data path
       - --image_size
