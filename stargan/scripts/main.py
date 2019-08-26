@@ -3,8 +3,8 @@ import os
 
 from torch.backends import cudnn
 
-from data_loader import get_loader
-from solver import Solver
+from .data_loader import get_loader
+from .solver import Solver
 
 
 def str2bool(v):

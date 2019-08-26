@@ -7,8 +7,8 @@ import torch
 import torch.nn.functional as F
 from torchvision.utils import save_image
 
-from model import Discriminator
-from model import Generator
+from .model import Discriminator
+from .model import Generator
 
 
 class Solver(object):
