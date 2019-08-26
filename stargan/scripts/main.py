@@ -39,7 +39,7 @@ def main(config):
                                    config.celeba_crop_size, config.image_size, config.batch_size,
                                    'CelebA', config.mode, config.num_workers)
     if config.dataset == 'RaFD':
-        rafd_loader = get_loader(config.image_train_dir, None, None,
+        rafd_loader = get_loader(config.image_train_dir, None,
                                  config.rafd_crop_size, config.image_size, config.batch_size,
                                  'RaFD', config.mode, config.num_workers)
 
@@ -49,11 +49,11 @@ def main(config):
 
     config.mode = 'test'
     if config.dataset == 'CelebA':
-        celeba_loader = get_loader(config.image_test_dir, config.attr_path, config.selected_attrs,
+        celeba_loader = get_loader(config.image_test_dir, config.selected_attrs,
                                    config.celeba_crop_size, config.image_size, config.batch_size,
                                    'CelebA', config.mode, config.num_workers)
     if config.dataset == 'RaFD':
-        rafd_loader = get_loader(config.image_test_dir, None, None,
+        rafd_loader = get_loader(config.image_test_dir, None,
                                  config.rafd_crop_size, config.image_size, config.batch_size,
                                  'RaFD', config.mode, config.num_workers)
 
