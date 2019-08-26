@@ -11,11 +11,11 @@ from torchvision.datasets import ImageFolder
 class CelebA(data.Dataset):
     """Dataset class for the CelebA dataset."""
 
-    def __init__(self, image_dir, attr_path, selected_attrs, transform, mode):
+    def __init__(self, image_dir, attr_path,selected_attrs, transform, mode):
         """Initialize and preprocess the CelebA dataset."""
         self.image_dir = image_dir
-        self.attr_path = attr_path
         self.selected_attrs = selected_attrs
+        self.attr_path = attr_path
         self.transform = transform
         self.mode = mode
         self.dataset = []
@@ -33,9 +33,10 @@ class CelebA(data.Dataset):
             self.idx2attr[i] = attr_name
 
         lines = lines[2:]
-        random.seed(1234)
+        random.seed(0)
         random.shuffle(lines)
         for i, line in enumerate(lines):
+            print(i,line)
             split = line.split()
             filename = split[0]
             values = split[1:]
@@ -60,7 +61,7 @@ class CelebA(data.Dataset):
         return self.num_images
 
 
-def get_loader(image_dir, attr_path, selected_attrs, crop_size=178, image_size=128,
+def get_loader(image_dir, selected_attrs, crop_size=178, image_size=128,
                batch_size=16, dataset='CelebA', mode='train', num_workers=1):
     """Build and return a data loader."""
     transform = []
@@ -73,9 +74,9 @@ def get_loader(image_dir, attr_path, selected_attrs, crop_size=178, image_size=1
     transform = T.Compose(transform)
 
     if dataset == 'CelebA':
-        dataset = CelebA(image_dir, attr_path, selected_attrs, transform, mode)
+        dataset = CelebA(os.path.join(image_dir, 'images'), os.path.join(image_dir, 'list_attr_celeba.txt'), selected_attrs, transform, mode)
     elif dataset == 'RaFD':
-        dataset = ImageFolder(image_dir, transform)
+        dataset = ImageFolder(os.path.join(image_dir, 'images'), transform)
 
     data_loader = data.DataLoader(dataset=dataset,
                                   batch_size=batch_size,
