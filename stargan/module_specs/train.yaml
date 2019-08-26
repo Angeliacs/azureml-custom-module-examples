@@ -72,5 +72,5 @@ implementation:
       - inputValue: Number of iterations
       - --batch_size
       - inputValue: Batch size
-      - --save_path
+      - --save_dir
       - outputPath: Save path
