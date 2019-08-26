@@ -287,8 +287,10 @@ class Solver(object):
         elif self.dataset == 'RaFD':
             data_loader = self.rafd_loader
 
+        print('data_loader', data_loader)
         with torch.no_grad():
             for i, (x_real, c_org) in enumerate(data_loader):
+                print(i, x_real, c_org)
 
                 # Prepare input images and target domain labels.
                 x_real = x_real.to(self.device)

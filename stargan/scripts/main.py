@@ -35,7 +35,7 @@ def main(config):
 
     config.mode = 'train'
     if config.dataset == 'CelebA':
-        celeba_loader = get_loader(config.image_train_dir, config.attr_path, config.selected_attrs,
+        celeba_loader = get_loader(config.image_train_dir, config.selected_attrs,
                                    config.celeba_crop_size, config.image_size, config.batch_size,
                                    'CelebA', config.mode, config.num_workers)
     if config.dataset == 'RaFD':
@@ -95,12 +95,10 @@ if __name__ == '__main__':
     # Miscellaneous.
     parser.add_argument('--num_workers', type=int, default=1)
     parser.add_argument('--mode', type=str, default='train', choices=['train', 'test'])
-    # parser.add_argument('--use_tensorboard', type=str2bool, default=True)
 
     # Directories.
-    parser.add_argument('--image_train_dir', type=str, default='data/celeba/images')
-    parser.add_argument('--image_test_dir', type=str, default='data/celeba/images')
-    parser.add_argument('--attr_path', type=str, default='data/celeba/list_attr_celeba.txt')
+    parser.add_argument('--image_train_dir', type=str, default='data/celeba')
+    parser.add_argument('--image_test_dir', type=str, default='data/celeba_test')
     parser.add_argument('--save_dir', type=str, default='stargan')
 
     # Step size.
