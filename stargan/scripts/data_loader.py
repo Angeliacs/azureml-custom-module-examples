@@ -36,7 +36,6 @@ class CelebA(data.Dataset):
         random.seed(0)
         random.shuffle(lines)
         for i, line in enumerate(lines):
-            print(i,line)
             split = line.split()
             filename = split[0]
             values = split[1:]
