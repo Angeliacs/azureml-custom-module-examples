@@ -56,7 +56,7 @@ implementation:
     command:
       - python
       - -m
-      - script.main
+      - scripts.main
     args:
       - --dataset
       - inputValue: Dataset type
